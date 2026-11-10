@@ -20,7 +20,7 @@ val releaseKeys: Properties? =
 
 android {
     sourceSets.getByName("main").kotlin.srcDir(rootProject.file("shared-guest-ui"))
-    namespace = "com.Solver.Absolveros.guest"
+    namespace = "com.fahadali.oneos.guest"
     compileSdk { version = release(37) }
 
     defaultConfig {
