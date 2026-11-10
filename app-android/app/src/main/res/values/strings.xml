@@ -127,7 +127,7 @@
     <string name="about_legal_summary">Not affiliated with Samsung, OPPO, Google or Project Infinity-X. Galaxy, One UI, ColorOS, Pixel and Android are trademarks of their owners.</string>
 
     <!-- Send to the OneOS team (0.4.29): SendReportActivity. -->
-    <string name="send_title">Send to the AbsolverOS team-we won't respond anyway because it was experimental-</string>
+    <string name="send_title">Send to the AbsolverOS team</string>
     <string name="send_unavailable">Sending isn\'t available in this build. Use Share instead.</string>
     <string name="send_cat_session">Session report</string>
     <string name="send_cat_probe">Phone report</string>
