@@ -21,14 +21,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Prepare overlays directory and gradlew
+        run: |
+          mkdir -p out/overlays
+          chmod +x app-android/gradlew
 
       - name: Build Debug APK
+        working-directory: app-android
         run: ./gradlew assembleFullDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AbsolverOs-debug
-          path: "**/build/outputs/apk/**/*.apk"
+          path: app-android/**/build/outputs/apk/**/*.apk
