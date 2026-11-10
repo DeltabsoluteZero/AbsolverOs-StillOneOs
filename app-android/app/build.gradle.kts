@@ -390,7 +390,7 @@ android {
     compileSdk { version = release(37) }
 
     defaultConfig {
-        applicationId = "com.fahadali.oneos"
+        applicationId = "com.Solver.Absolveros"
         minSdk = 31
         targetSdk = 36
         // Friend build 2: the first build that stages and switches (docs/app/DESIGN.md, build 2).
