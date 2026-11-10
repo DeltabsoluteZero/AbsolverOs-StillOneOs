@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The full edition (OneOS): its own texts and the switching screens. -->
 <resources>
-    <string name="app_name">OneOS</string>
+    <string name="app_name">AbsolverOS</string>
 
     <!-- Before you start (first launch until acknowledged; again from Home and About) -->
     <string name="before_link_summary">What can break, backups and the screen lock</string>
-    <string name="before_experimental_title">OneOS is experimental</string>
+    <string name="before_experimental_title">AbsolverOS is experimental</string>
     <string name="before_backup_title">Back up first</string>
     <string name="before_backup_summary">Back up your accounts and data first: Samsung Cloud, Google, Smart Switch.</string>
     <string name="before_lock_title">Remove the screen lock</string>
@@ -16,7 +16,7 @@
     <!-- Home (the redesign: one status, one button). No system is named here:
          %1$s is the image table's name (StringsNeutralTest). -->
     <string name="home_subtitle">Another system next to One UI</string>
-    <string name="home_about_title">About OneOS</string>
+    <string name="home_about_title">About AbsolverOS</string>
     <string name="home_checking">Checking your phone…</string>
     <string name="home_choose">Choose a system</string>
     <string name="home_system_ready">%1$s is ready</string>
@@ -26,7 +26,7 @@
     <string name="home_setting_up_start">Setting up %1$s</string>
     <string name="home_eta">About %1$d min left</string>
     <string name="home_eta_wait">Estimating time…</string>
-    <string name="home_setup_keep_open">Keep OneOS open and your phone plugged in.</string>
+    <string name="home_setup_keep_open">Keep AbsolverOS open and your phone plugged in.</string>
     <string name="home_switching">Getting %1$s ready…</string>
     <string name="home_closing">One UI is closing…</string>
     <string name="home_restoring">Restoring One UI\'s settings…</string>
@@ -39,7 +39,7 @@
     <string name="home_details">Details</string>
     <string name="home_details_all">All checks</string>
     <string name="menu_how">Before you start</string>
-    <string name="menu_about">About OneOS</string>
+    <string name="menu_about">About AbsolverOS</string>
 
     <!-- Use a downloaded file: the texts that did not change (the rest: strings_advanced.xml) -->
     <string name="image_choice_title">%1$s image</string>
