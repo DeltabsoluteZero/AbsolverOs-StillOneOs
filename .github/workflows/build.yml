@@ -21,11 +21,11 @@ jobs:
       - name: Accept Android SDK Licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
-      - name: Build Guest Manager APK
+      - name: Build Guest Manager APK (Debug)
         run: |
           mkdir -p out/overlays
           chmod +x scripts/build-guest-manager.sh
-          ./scripts/build-guest-manager.sh
+          ./scripts/build-guest-manager.sh --debug
 
       - name: Build Main Debug APK
         working-directory: app-android
