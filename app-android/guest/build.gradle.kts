@@ -24,7 +24,7 @@ android {
     compileSdk { version = release(37) }
 
     defaultConfig {
-        applicationId = "com.Solver.Absolveros.guest"
+        applicationId = "com.fahadali.oneos.guest"
         minSdk = 31
         targetSdk = 36
         // 0.2 (OneOS 0.4.30): How's it going?, the checklist for Send to the OneOS team.
