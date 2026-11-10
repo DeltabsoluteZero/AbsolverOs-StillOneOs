@@ -22,6 +22,9 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
       - name: Build Guest Manager APK (Debug)
+        env:
+          GH_PACKAGES_USER: ${{ github.actor }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p out/overlays
           chmod +x scripts/build-guest-manager.sh
@@ -29,6 +32,9 @@ jobs:
 
       - name: Build Main Debug APK
         working-directory: app-android
+        env:
+          GH_PACKAGES_USER: ${{ github.actor }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod +x gradlew
           ./gradlew assembleFullDebug
