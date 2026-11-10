@@ -18,7 +18,7 @@
     <string name="home_tests_summary">Read-only tests as root for the OneOS team. Nothing on the phone changes.</string>
     <string name="home_send_title">Send the findings to the OneOS team</string>
     <string name="home_send_summary">After Run tests, share the findings zip with the team so they can check whether OneOS can run on this phone.</string>
-    <string name="home_cat_app">OneOS</string>
+    <string name="home_cat_app">AbsolverOS</string>
     <string name="home_about_summary">What this version does, safety and credits</string>
 
     <!-- Device report -->
@@ -71,7 +71,7 @@
     <string name="findings_share">Share</string>
     <string name="findings_save">Save to Downloads</string>
     <string name="findings_share_chooser">Send the findings to the OneOS team</string>
-    <string name="findings_share_subject">OneOS findings</string>
+    <string name="findings_share_subject">AbsolverOS findings</string>
     <string name="findings_cat_bundle">Findings</string>
     <string name="findings_send_title">Send the findings to the OneOS team</string>
     <string name="findings_send_summary">Share sends the zip below. Personal data was removed; tap any file to see exactly what is in it.</string>
@@ -90,7 +90,7 @@
 
     <!-- Session logs (the findings preview with a log bundle) -->
     <string name="logs_title">Session logs</string>
-    <string name="logs_share_subject">OneOS session logs</string>
+    <string name="logs_share_subject">AbsolverOS session logs</string>
     <string name="logs_share_chooser">Send the session logs to the OneOS team</string>
     <string name="logs_cat_bundle">Session logs</string>
     <string name="logs_send_title">Send the logs to the OneOS team</string>
@@ -100,9 +100,9 @@
     <string name="logs_delete_confirm">Delete the session logs?</string>
 
     <!-- About -->
-    <string name="about_cat_app">OneOS</string>
+    <string name="about_cat_app">AbsolverOS</string>
     <string name="about_version_title">Version</string>
-    <string name="about_what_title">What OneOS is</string>
+    <string name="about_what_title">What AbsolverOS is</string>
     <string name="about_what_summary">Runs another Android OS, built on the OneOS server from an OEM update, next to One UI on a rooted Samsung flagship, and goes back to One UI, usually without a restart. Nothing is flashed.</string>
     <string name="about_version_scope_title">This version</string>
     <string name="about_tested_title">Tested</string>
@@ -127,7 +127,7 @@
     <string name="about_legal_summary">Not affiliated with Samsung, OPPO, Google or Project Infinity-X. Galaxy, One UI, ColorOS, Pixel and Android are trademarks of their owners.</string>
 
     <!-- Send to the OneOS team (0.4.29): SendReportActivity. -->
-    <string name="send_title">Send to the OneOS team</string>
+    <string name="send_title">Send to the AbsolverOS team[we won't respond anyway becauseit was experimental]</string>
     <string name="send_unavailable">Sending isn\'t available in this build. Use Share instead.</string>
     <string name="send_cat_session">Session report</string>
     <string name="send_cat_probe">Phone report</string>
