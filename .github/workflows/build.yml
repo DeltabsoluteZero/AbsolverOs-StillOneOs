@@ -26,13 +26,20 @@ jobs:
           GH_PACKAGES_USER: ${{ github.actor }}
           GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          SCRIPT_PATH=$(find . -name "build-guest-manager.sh" | head -n 1)
-          REPO_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)
-          echo "Detected Repo Root: $REPO_ROOT"
-          cd "$REPO_ROOT"
+          pwd
+          ls -la
           mkdir -p out/overlays
-          chmod +x scripts/build-guest-manager.sh
-          ./scripts/build-guest-manager.sh --debug
+          if [ -f "scripts/build-guest-manager.sh" ]; then
+            chmod +x scripts/build-guest-manager.sh
+            ./scripts/build-guest-manager.sh --debug
+          else
+            cd app-android
+            chmod +x gradlew
+            ./gradlew :guest:assembleDebug
+            mkdir -p ../switcher/assets
+            cp guest/build/outputs/apk/debug/guest-debug.apk ../switcher/assets/guest_manager.apk
+            cd ..
+          fi
           cd app-android
           chmod +x gradlew
           ./gradlew assembleFullDebug
