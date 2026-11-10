@@ -21,21 +21,19 @@ jobs:
       - name: Accept Android SDK Licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
-      - name: Build Guest Manager APK (Debug)
+      - name: Build Guest Manager & Main Debug APK
         env:
           GH_PACKAGES_USER: ${{ github.actor }}
           GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          SCRIPT_PATH=$(find . -name "build-guest-manager.sh" | head -n 1)
+          REPO_ROOT=$(cd "$(dirname "$SCRIPT_PATH")/.." && pwd)
+          echo "Detected Repo Root: $REPO_ROOT"
+          cd "$REPO_ROOT"
           mkdir -p out/overlays
           chmod +x scripts/build-guest-manager.sh
           ./scripts/build-guest-manager.sh --debug
-
-      - name: Build Main Debug APK
-        working-directory: app-android
-        env:
-          GH_PACKAGES_USER: ${{ github.actor }}
-          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
+          cd app-android
           chmod +x gradlew
           ./gradlew assembleFullDebug
 
@@ -43,4 +41,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: AbsolverOs-debug
-          path: app-android/**/build/outputs/apk/**/*.apk
+          path: "**/build/outputs/apk/**/*.apk"
