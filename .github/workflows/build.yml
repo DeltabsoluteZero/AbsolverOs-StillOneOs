@@ -18,20 +18,21 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK Licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
-      - name: Prepare overlays directory and gradlew
+      - name: Find gradlew and build APK
         run: |
           mkdir -p out/overlays
-          chmod +x app-android/gradlew
-
-      - name: Build Debug APK
-        working-directory: app-android
-        run: ./gradlew assembleFullDebug
+          GRADLEW_PATH=$(find . -maxdepth 3 -name "gradlew" | head -n 1)
+          echo "Found gradlew at: $GRADLEW_PATH"
+          chmod +x "$GRADLEW_PATH"
+          cd "$(dirname "$GRADLEW_PATH")"
+          ./gradlew assembleDebug || ./gradlew assembleFullDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AbsolverOs-debug
-          path: app-android/**/build/outputs/apk/**/*.apk
+          path: "**/build/outputs/apk/**/*.apk"
+
