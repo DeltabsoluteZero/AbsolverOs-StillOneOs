@@ -21,18 +21,20 @@ jobs:
       - name: Accept Android SDK Licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
-      - name: Find gradlew and build APK
+      - name: Build Guest Manager APK
         run: |
           mkdir -p out/overlays
-          GRADLEW_PATH=$(find . -maxdepth 3 -name "gradlew" | head -n 1)
-          echo "Found gradlew at: $GRADLEW_PATH"
-          chmod +x "$GRADLEW_PATH"
-          cd "$(dirname "$GRADLEW_PATH")"
-          ./gradlew assembleDebug || ./gradlew assembleFullDebug
+          chmod +x scripts/build-guest-manager.sh
+          ./scripts/build-guest-manager.sh
+
+      - name: Build Main Debug APK
+        working-directory: app-android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleFullDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: AbsolverOs-debug
-          path: "**/build/outputs/apk/**/*.apk"
-
+          path: app-android/**/build/outputs/apk/**/*.apk
