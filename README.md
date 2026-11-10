@@ -2,7 +2,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/banner-dark-2x.png">
     <source media="(prefers-color-scheme: light)" srcset="images/banner-light-2x.png">
-    <img src="images/banner-light-2x.png" width="100%" alt="OneOS: another Android, next to One UI. Nothing flashed. Switch from an app, come back the same way. A One UI phone and a OneOS foldable, with arrows going both ways.">
+    <img src="images/banner-light-2x.png" width="100%" alt="AbsolverOs[oneos]: another Android, next to One UI. Nothing flashed. Switch from an app, come back the same way. A One UI phone and a OneOS foldable, with arrows going both ways.">
   </picture>
 </p>
 
