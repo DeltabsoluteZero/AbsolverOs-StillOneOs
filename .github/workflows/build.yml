@@ -58,13 +58,30 @@ jobs:
           
       - name: Gradle credentials for GitHub Packages (SESL libs)
         env:
-          GH_USER: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+          GPR_USER: ${{ github.actor }}
+          GPR_KEY: ${{ secrets.PACKAGES_TOKEN }}
         run: |
-          mkdir -p ~/.gradle
-          printf 'gpr.user=%s\ngpr.key=%s\ngprUser=%s\ngprKey=%s\n' \
-            "$GH_USER" "$GH_TOKEN" "$GH_USER" "$GH_TOKEN" >> ~/.gradle/gradle.properties
-          chmod 600 ~/.gradle/gradle.properties
+          echo "GPR_USER=$GPR_USER"  >> $GITHUB_ENV
+          echo "GPR_KEY=$GPR_KEY"    >> $GITHUB_ENV
+          mkdir -p ~/.gradle/init.d
+          # 1) property form (some builds read these directly)
+          { echo "gpr.user=$GPR_USER"; echo "gpr.key=$GPR_KEY";
+            echo "gprUser=$GPR_USER";  echo "gprKey=$GPR_KEY"; } >> ~/.gradle/gradle.properties
+          # 2) init script: attach creds to every GitHub-Packages repo, whatever the project calls them
+          cat > ~/.gradle/init.d/gpr.gradle <<'EOF'
+          def u = System.getenv('GPR_USER'); def k = System.getenv('GPR_KEY')
+          if (u && k) {
+            def fix = { repos -> repos.all { r ->
+              if (r instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository
+                  && r.url.toString().startsWith('https://maven.pkg.github.com')) {
+                r.credentials { username = u; password = k }
+              }
+            } }
+            settingsEvaluated { s -> fix(s.pluginManagement.repositories); fix(s.dependencyResolutionManagement.repositories) }
+            allprojects { p -> fix(p.repositories) }
+          }
+          EOF
+          chmod 600 ~/.gradle/gradle.properties ~/.gradle/init.d/gpr.gradle
           
       - name: Stage guest manager (sign with our own release key)
         run: |
