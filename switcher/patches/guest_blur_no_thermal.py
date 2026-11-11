@@ -48,8 +48,12 @@ def main(root):
             j += 1
         if re.match(rf"^\s*if-nez {m.group(1)}, :cond_\w+$", lines[j]):
             hits.append((k, j))
+<<<<<<< HEAD
             
             if len(hits) == 0:
+=======
+    if len(hits) == 0:
+>>>>>>> 4a08814 (guest_blur_no_thermal: 0 thermal-guard hits = no-op (pudding))
         print("guest_blur_no_thermal: no thermal guard on this build, nothing to patch")
         return
     if len(hits) != 1:
