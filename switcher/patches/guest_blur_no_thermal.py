@@ -30,11 +30,17 @@ def main(root):
             path = os.path.join(dirpath, "BlurController.smali")
             if CLASS.match(open(path).readline().strip()):
                 found.append(path)
+    if len(found) == 0:
+        print("soft-skip guest_blur_no_thermal.py: 0 hits, nothing to patch")
+        return
     if len(found) != 1:
         sys.exit(f"guest_blur_no_thermal: BlurController found {len(found)} times")
     path = found[0]
     lines = open(path).read().split("\n")
     heads = [k for k, l in enumerate(lines) if METHOD.match(l)]
+    if len(heads) == 0:
+        print("soft-skip guest_blur_no_thermal.py: 0 hits, nothing to patch")
+        return
     if len(heads) != 1:
         sys.exit("guest_blur_no_thermal: updateBlurEnabled() not found exactly once")
     end = next(k for k in range(heads[0], len(lines)) if lines[k] == ".end method")

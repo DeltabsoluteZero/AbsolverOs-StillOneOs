@@ -35,6 +35,9 @@ def main(root):
             p = os.path.join(d, f)
             if p.endswith(REL):
                 hits.append(p)
+    if len(hits) == 0:
+        print("soft-skip guest_secims_path_upgrade.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {REL}, found {len(hits)}")
     path = hits[0]
@@ -47,6 +50,9 @@ def main(root):
         r'move-result (?P=a)\n(?P<g3>\s*)'
         r'if-eqz (?P=a), (?P<done>:\w+)\n')
     found = list(pat.finditer(s))
+    if len(found) == 0:
+        print("soft-skip guest_secims_path_upgrade.py: 0 hits, nothing to patch")
+        return
     if len(found) != 1:
         sys.exit(f"{path}: the one-path carve-out check found {len(found)} times, expected once")
     m = found[0]

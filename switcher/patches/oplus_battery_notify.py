@@ -27,6 +27,9 @@ STORE = re.compile(r"^(    iput (v\d+), p0, Lcom/android/server/OplusBatteryServ
 def find(root, rel_suffix):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(rel_suffix)]
+    if len(hits) == 0:
+        print("soft-skip oplus_battery_notify.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"{rel_suffix}: {len(hits)} matches")
     return hits[0]

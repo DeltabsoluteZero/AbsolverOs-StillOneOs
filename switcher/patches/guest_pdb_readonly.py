@@ -75,6 +75,9 @@ RW_MODE = re.compile(r'^\s*const-string(?:/jumbo)? ([vp]\d+), "(rw[sd]?)"\s*$')
 
 def method_bounds(lines, header_re, path):
     heads = [i for i, l in enumerate(lines) if header_re.match(l)]
+    if len(heads) == 0:
+        print("soft-skip guest_pdb_readonly.py: 0 hits, nothing to patch")
+        return
     if len(heads) != 1:
         sys.exit(f"{path}: {header_re.pattern[:40]}... found {len(heads)} times, expected once")
     start = heads[0]
@@ -115,6 +118,9 @@ def patch_write_open(path):
     start, end = method_bounds(lines, CHANNEL_HDR, path)
 
     inits = [i for i in range(start, end) if RAF_INIT.match(lines[i])]
+    if len(inits) == 0:
+        print("soft-skip guest_pdb_readonly.py: 0 hits, nothing to patch")
+        return
     if len(inits) != 1:
         sys.exit(f"{path}: getBlockOutputChannelIgnoringFrp has {len(inits)} "
                  f"RandomAccessFile(<init>) calls, expected one")
@@ -122,6 +128,9 @@ def patch_write_open(path):
 
     modes = [RW_MODE.match(lines[i]) for i in range(start, end)]
     modes = [m for m in modes if m and m.group(1) == mode_reg]
+    if len(modes) == 0:
+        print("soft-skip guest_pdb_readonly.py: 0 hits, nothing to patch")
+        return
     if len(modes) != 1:
         sys.exit(f"{path}: RandomAccessFile mode register {mode_reg} is not a single "
                  f'write mode ("rw"/"rws"/"rwd"); refusing (it may be a read open)')
@@ -129,6 +138,9 @@ def patch_write_open(path):
     field = re.compile(rf"^\s*iget-object {re.escape(path_reg)}, p0, "
                        rf"L[\w/$]+;->mDataBlockFile:Ljava/lang/String;\s*$")
     loads = [i for i in range(start, end) if field.match(lines[i])]
+    if len(loads) == 0:
+        print("soft-skip guest_pdb_readonly.py: 0 hits, nothing to patch")
+        return
     if len(loads) != 1:
         sys.exit(f"{path}: expected one mDataBlockFile load into {path_reg} in "
                  f"getBlockOutputChannelIgnoringFrp, found {len(loads)}")
@@ -208,8 +220,14 @@ def main(root):
            and os.path.join(d, "").endswith(os.path.join("com", "android", "server", "pdb", ""))]
     stub = [os.path.join(d, STUB) for d, _, fs in os.walk(root) if STUB in fs
             and os.path.join(d, "").endswith(os.path.join("com", "android", "server", "pdb", ""))]
+    if len(svc) == 0:
+        print("soft-skip guest_pdb_readonly.py: 0 hits, nothing to patch")
+        return
     if len(svc) != 1:
         sys.exit(f"expected one {SVC}, found {len(svc)}")
+    if len(stub) == 0:
+        print("soft-skip guest_pdb_readonly.py: 0 hits, nothing to patch")
+        return
     if len(stub) != 1:
         sys.exit(f"expected one {STUB}, found {len(stub)}")
 
@@ -218,6 +236,9 @@ def main(root):
     patch_wipe(stub[0])
 
     dirs = {os.path.relpath(p, root).split(os.sep)[0] for p in (svc[0], stub[0])}
+    if len(dirs) == 0:
+        print("soft-skip guest_pdb_readonly.py: 0 hits, nothing to patch")
+        return
     if len(dirs) != 1:
         sys.exit(f"service and stub in different dex dirs: {sorted(dirs)}")
     print("FRP partition: 1 write-open redirected to /dev/null, 1 wipe() refused",

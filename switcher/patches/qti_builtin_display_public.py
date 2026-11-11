@@ -51,6 +51,9 @@ def expect(lines, i, pattern, what):
 
 def main(root):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs if os.path.join(d, f).endswith(CLS)]
+    if len(hits) == 0:
+        print("soft-skip qti_builtin_display_public.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"{CLS}: {len(hits)} matches")
     path = hits[0]

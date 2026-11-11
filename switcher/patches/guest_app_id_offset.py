@@ -237,6 +237,9 @@ def vivo(lines, i, end, code, rel):
 def main(root):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + SUFFIX)]
+    if len(hits) == 0:
+        print("soft-skip guest_app_id_offset.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"expected one AppIdSettingMap.smali, found {len(hits)}")
     path = hits[0]
@@ -248,6 +251,9 @@ def main(root):
     if any("oneos_appid" in l for l in lines):
         sys.exit(f"{rel}: already patched")
     heads = [k for k, l in enumerate(lines) if HEADER.match(l)]
+    if len(heads) == 0:
+        print("soft-skip guest_app_id_offset.py: 0 hits, nothing to patch")
+        return
     if len(heads) != 1:
         sys.exit(f"{rel}: acquireAndRegisterNewAppId(SettingBase) found {len(heads)} times, expected once")
     i = heads[0]

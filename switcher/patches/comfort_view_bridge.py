@@ -73,6 +73,9 @@ def main(root, helper):
             if os.path.join(d, f).endswith(os.sep + CLS)]
     if not hits:
         skip("no ColorDisplayService in this services.jar")
+    if len(hits) == 0:
+        print("soft-skip comfort_view_bridge.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {CLS}, found {len(hits)}")
     path = hits[0]

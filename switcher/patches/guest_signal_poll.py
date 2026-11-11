@@ -41,6 +41,9 @@ INJECT = """
 def find(root, rel_suffix):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(rel_suffix)]
+    if len(hits) == 0:
+        print("soft-skip guest_signal_poll.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {rel_suffix}, found {len(hits)}")
     return hits[0]

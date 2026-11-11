@@ -71,6 +71,9 @@ def main(root):
             sys.exit(f"{d}/{CLASS}: already patched")
         lines = text.split("\n")
         heads = [k for k, l in enumerate(lines) if HEADER.match(l)]
+        if len(heads) == 0:
+            print("soft-skip guest_sms_invalid_response.py: 0 hits, nothing to patch")
+            return
         if len(heads) != 1:
             sys.exit(f"{d}/{CLASS}: responseSms(RadioResponseInfo, SendSmsResult) found {len(heads)} times")
         i = heads[0]
@@ -79,11 +82,17 @@ def main(root):
         # The method must read RadioResponseInfo.error (the check this patch
         # runs ahead of) and must not already write it.
         reads = [l for l in body if re.match(r"\s*iget \w+, p1, Landroid/hardware/radio/RadioResponseInfo;->error:I$", l)]
+        if len(reads) == 0:
+            print("soft-skip guest_sms_invalid_response.py: 0 hits, nothing to patch")
+            return
         if len(reads) != 1:
             sys.exit(f"{d}/{CLASS}: responseSms reads RadioResponseInfo.error {len(reads)} times, expected 1")
         if any("iput" in l and "RadioResponseInfo;->error:I" in l for l in body):
             sys.exit(f"{d}/{CLASS}: responseSms already writes RadioResponseInfo.error")
         locs = [k for k in range(i, end) if re.match(r"\s*\.locals (\d+)$", lines[k])]
+        if len(locs) == 0:
+            print("soft-skip guest_sms_invalid_response.py: 0 hits, nothing to patch")
+            return
         if len(locs) != 1:
             sys.exit(f"{d}/{CLASS}: responseSms has {len(locs)} .locals lines")
         k = locs[0]

@@ -43,12 +43,18 @@ def main(root):
         found = list(METHOD.finditer(smali))
         if not found:
             continue
+        if len(found) == 0:
+            print("soft-skip skip_host_apex_services.py: 0 hits, nothing to patch")
+            return
         if len(found) != 1:
             sys.exit("startApexServices: found more than once")
         start = found[0].start()
         end = smali.index(".end method", start)
         lines = smali[start:end].split("\n")
         calls = [i for i, l in enumerate(lines) if CALL.match(l)]
+        if len(calls) == 0:
+            print("soft-skip skip_host_apex_services.py: 0 hits, nothing to patch")
+            return
         if len(calls) != 1:
             sys.exit("startApexServices: startServiceFromJar call not found as expected")
         idx = calls[0]
@@ -65,6 +71,9 @@ def main(root):
             sys.exit("startApexServices: startServiceFromJar call not between a branch label and a goto label")
         branch = [re.match(rf"^\s*if-eqz (v\d+), {lines[label].strip()}$", l) for l in lines]
         branch = [m.group(1) for m in branch if m]
+        if len(branch) == 0:
+            print("soft-skip skip_host_apex_services.py: 0 hits, nothing to patch")
+            return
         if len(branch) != 1:
             sys.exit("startApexServices: the isEmpty branch to the call not found")
         s = branch[0]

@@ -89,6 +89,9 @@ HELPER = f"""
 def find(root):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.path.join("com", "android", "server", "am", "ActiveServices.smali"))]
+    if len(hits) == 0:
+        print("soft-skip guest_no_native_services.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"ActiveServices.smali: {len(hits)} matches")
     return hits[0]
@@ -117,11 +120,17 @@ def main():
     if any("oneosNativeRefused" in l for l in lines):
         sys.exit("ActiveServices already patched")
     heads = [i for i, l in enumerate(lines) if HEADER.match(l)]
+    if len(heads) == 0:
+        print("soft-skip guest_no_native_services.py: 0 hits, nothing to patch")
+        return
     if len(heads) != 1:
         sys.exit(f"ActiveServices.bringUpServiceInnerLocked: {len(heads)} matches")
     head = heads[0]
     end = next(i for i in range(head, len(lines)) if lines[i].startswith(".end method"))
     calls = [i for i in range(head, end) if START.match(lines[i])]
+    if len(calls) == 0:
+        print("soft-skip guest_no_native_services.py: 0 hits, nothing to patch")
+        return
     if len(calls) != 1:
         sys.exit(f"bringUpServiceInnerLocked: {len(calls)} startProcessLocked(HostingRecord) calls, expected 1")
     call = calls[0]

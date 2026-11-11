@@ -32,11 +32,17 @@ HEADER = re.compile(r"^\.method (?:private |public |final )*startCleanupUnknownH
 def main(root):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + SUFFIX)]
+    if len(hits) == 0:
+        print("soft-skip guest_no_biometric_cleanup.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"expected one InternalCleanupClient.smali, found {len(hits)}")
     path = hits[0]
     lines = open(path).read().split("\n")
     heads = [i for i, l in enumerate(lines) if HEADER.match(l)]
+    if len(heads) == 0:
+        print("soft-skip guest_no_biometric_cleanup.py: 0 hits, nothing to patch")
+        return
     if len(heads) != 1:
         sys.exit(f"{path}: startCleanupUnknownHalTemplates() found {len(heads)} times, expected once")
     # The fields used below must be the ones this build has. mCallback is

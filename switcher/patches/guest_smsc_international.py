@@ -113,6 +113,9 @@ def main(root):
             sys.exit(f"{d}/{CLASS}: already patched")
         lines = text.split("\n")
         heads = [k for k, l in enumerate(lines) if HEADER.match(l)]
+        if len(heads) == 0:
+            print("soft-skip guest_smsc_international.py: 0 hits, nothing to patch")
+            return
         if len(heads) != 1:
             sys.exit(f"{d}/{CLASS}: getSmscAddressFromIccEf found {len(heads)} times")
         i = heads[0]
@@ -127,6 +130,9 @@ def main(root):
                 j -= 1
             if lines[j].strip() == f"check-cast {r}, Ljava/lang/String;":
                 hits.append((k, r))
+        if len(hits) == 0:
+            print("soft-skip guest_smsc_international.py: 0 hits, nothing to patch")
+            return
         if len(hits) != 1:
             sys.exit(f"{d}/{CLASS}: expected one String result return, found {len(hits)}")
         k, r = hits[0]

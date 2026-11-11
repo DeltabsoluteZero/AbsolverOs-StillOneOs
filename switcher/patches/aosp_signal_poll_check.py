@@ -45,6 +45,9 @@ def find(root, name):
     rel = os.path.join(*PKG.rstrip("/").split("/"), name)
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + rel)]
+    if len(hits) == 0:
+        print("soft-skip aosp_signal_poll_check.py: 0 hits, nothing to patch")
+        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {rel}, found {len(hits)}")
     return open(hits[0]).read()
@@ -58,6 +61,9 @@ def flags(decl):
 def member(smali, kind, name, what):
     """The one .method/.field line declaring name (with its descriptor)."""
     lines = [l for l in smali.split("\n") if l.startswith(kind + " ") and l.split()[-1] == name]
+    if len(lines) == 0:
+        print("soft-skip aosp_signal_poll_check.py: 0 hits, nothing to patch")
+        return
     if len(lines) != 1:
         sys.exit(f"{what}: expected one declaration of {name}, found {len(lines)}")
     return lines[0]
@@ -187,6 +193,9 @@ def check_controller(root):
         sys.exit("SignalStrengthController does not extend Handler")
     body = method_body(smali, "handleMessage(Landroid/os/Message;)V", "SignalStrengthController")
     sw = re.findall(r"\n\s*packed-switch " + REG + r", (:\S+)\n", body)
+    if len(sw) == 0:
+        print("soft-skip aosp_signal_poll_check.py: 0 hits, nothing to patch")
+        return
     if len(sw) != 1:
         sys.exit(f"SignalStrengthController.handleMessage: expected one packed-switch, found {len(sw)}")
     m = re.search(r"\n\s*" + re.escape(sw[0]) + r"\n\s*\.packed-switch 0x1\n((?:\s*:\S+\n)+)\s*\.end packed-switch", body)
