@@ -56,8 +56,19 @@ jobs:
         run: |
           [ -f "scripts/build-guest-manager.sh --debug" ] && mv "scripts/build-guest-manager.sh --debug" scripts/build-guest-manager.sh || true
 
-      - name: Stage guest manager
-        run: bash scripts/build-guest-manager.sh
+      - name: Stage guest manager (sign with our own release key)
+        run: |
+          mkdir -p ~/.oneos-release
+          keytool -genkeypair -keystore ~/.oneos-release/oneos.jks -storepass oneos123 \
+            -alias oneos -keypass oneos123 -dname "CN=AbsolverOS" -keyalg RSA -keysize 2048 -validity 10000
+          echo "storeFile=$HOME/.oneos-release/oneos.jks" > ~/.oneos-release/keystore.properties
+          echo "storePassword=oneos123" >> ~/.oneos-release/keystore.properties
+          echo "keyAlias=oneos" >> ~/.oneos-release/keystore.properties
+          echo "keyPassword=oneos123" >> ~/.oneos-release/keystore.properties
+          bash scripts/build-guest-manager.sh release \
+            || bash scripts/build-guest-manager.sh debug \
+            || bash scripts/build-guest-manager.sh
+          ls -l switcher/assets/guest_manager.apk
 
       - name: Generate the matching patch set
         run: bash scripts/make-overlays.sh system.img out/overlays_hyperos_r25
