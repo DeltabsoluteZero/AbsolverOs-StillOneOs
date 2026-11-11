@@ -27,6 +27,7 @@ jobs:
           keytool -genkeypair -keystore ~/.android/debug.keystore -storepass android \
             -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
           echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=/opt/android-sdk" >> $GITHUB_ENV
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
           echo "EXTRACT_EROFS=$(command -v extract.erofs || true)" >> $GITHUB_ENV
 
