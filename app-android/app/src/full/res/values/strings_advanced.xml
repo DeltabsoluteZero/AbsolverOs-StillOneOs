@@ -27,25 +27,25 @@
     <string name="advanced_last_none">No session yet</string>
     <string name="advanced_last_outcome">%1$s · %2$s</string>
     <string name="advanced_last_test">%1$s · test run</string>
-    <string name="advanced_logs_summary">Share them with the OneOS team. Personal info is removed first.</string>
+    <string name="advanced_logs_summary">Share them with the AbsolverOS team. Personal info is removed first.</string>
     <string name="advanced_restore_summary">Only needed after a force restart during a session</string>
     <string name="advanced_heat_cap_title">Cool down when hot</string>
-    <string name="advanced_heat_cap_summary">One UI\'s heat control doesn\'t run in the other system. From 45 °C, OneOS slows the processor there until the phone cools down.</string>
+    <string name="advanced_heat_cap_summary">One UI\'s heat control doesn\'t run in the other system. From 45 °C, AbsolverOS the processor there until the phone cools down.</string>
     <string name="advanced_card_help">Help</string>
     <string name="advanced_before_summary">What can break, backups and the screen lock</string>
     <string name="advanced_about_summary">Version, safety and credits</string>
-    <string name="advanced_team_summary">Technical screens, for when the OneOS team asks</string>
-    <string name="remove_title">Remove OneOS data</string>
-    <string name="remove_summary">Delete the system, old copies and logs OneOS put on this phone</string>
-    <string name="remove_running">Removing OneOS data…</string>
+    <string name="advanced_team_summary">Technical screens, for when the AbsolverOS team asks</string>
+    <string name="remove_title">Remove AbsolverOS data</string>
+    <string name="remove_summary">Delete the system, old copies and logs AbsolverOS put on this phone</string>
+    <string name="remove_running">Removing AbsolverOS data…</string>
     <string name="remove_busy">OneOS is busy with your phone. Try again in a moment.</string>
     <string name="remove_confirm_title">Remove all OneOS data?</string>
     <string name="remove_confirm_message">This deletes everything OneOS put on this phone: the system you set up, with the apps and accounts in it, every old copy, and the session logs. One UI and its apps and data are not touched. OneOS stays installed, and downloaded system files stay where you saved them. This can\'t be undone.</string>
     <string name="remove_confirm_run">Remove</string>
 
     <!-- For the OneOS team -->
-    <string name="team_title">For the OneOS team</string>
-    <string name="team_note">Technical screens. Open them when the OneOS team asks you to.</string>
+    <string name="team_title">For the AbsolverOS team</string>
+    <string name="team_note">Technical screens. Open them when the AbsolverOS team asks you to.</string>
     <string name="team_card_checks">Checks and tests</string>
     <string name="team_switch_summary">Every check in detail, then a test run or the switch</string>
     <string name="team_phone_summary">Model, chip, software and root</string>
