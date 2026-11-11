@@ -135,7 +135,7 @@ SPLASH_COMPONENT=com.fahadali.oneos/.ui.GapSplashActivity
 OLD_SWITCHER=com.wewaffles.onelineage
 IMAGE_SDK=37
 # 0.4.66: the images of SDK 36 (Android 16, for One UI 8 phones); every other image is IMAGE_SDK.
-IMAGES_SDK36="oxygenos16-cph2745"
+IMAGES_SDK36="hyperos-lhasa, oxygenos16-cph2745"
 # SHA-256 of the method lines of switcher/patches/host_installd.txt: the
 # installd codes the guard jars carry (InstalldExpected.SHA256).
 INSTALLD_SHA="a7c17883707d98b08a52e53f75f5d8c3b4522ba1cd120026d29308b69da968945977"
