@@ -19,19 +19,16 @@ jobs:
           sudo mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
           yes | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk \
             "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
-          for i in 1 2 3 4 5; do
-            sudo apt-get update -o Acquire::Retries=5 \
-              && sudo apt-get install -y -o Acquire::Retries=5 erofs-utils e2fsprogs zip unzip && break
-            echo "apt attempt $i failed, retrying"; sleep 20
-          done
-          command -v extract.erofs
+          # e2fsprogs/zip/unzip ship with ubuntu-latest; erofs-utils is optional (only GMS payloads need it)
+          command -v debugfs && command -v unzip
+          sudo apt-get install -y erofs-utils || echo "erofs-utils unavailable - OK for the HyperOS set"
           curl -Lo ~/apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v2.11.1/apktool_2.11.1.jar
           mkdir -p ~/.android
           keytool -genkeypair -keystore ~/.android/debug.keystore -storepass android \
             -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
           echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
-          echo "EXTRACT_EROFS=$(command -v extract.erofs)" >> $GITHUB_ENV
+          echo "EXTRACT_EROFS=$(command -v extract.erofs || true)" >> $GITHUB_ENV
 
       - name: Fetch pudding image from Google Drive folder
         run: |
