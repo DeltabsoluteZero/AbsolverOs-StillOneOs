@@ -6,7 +6,7 @@
          (StringsNeutralTest reads this file). -->
 
     <!-- Hero -->
-    <string name="home_overline">OneOS</string>
+    <string name="home_overline">AbsolverOS</string>
     <string name="home_line_ready">Ready to switch · Android %1$s</string>
     <string name="home_line_kept">Your apps and data in it are kept</string>
     <string name="home_line_setup_time">Setup takes about 15 minutes</string>
@@ -83,7 +83,7 @@
     <string name="home_sheet_ways_three">Three ways back to One UI</string>
     <string name="home_sheet_ways_two">Two ways back to One UI</string>
     <string name="home_sheet_back_app">Tap Back to One UI</string>
-    <string name="home_sheet_back_app_line">In the OneOS app inside %1$s, or its Quick Settings tile</string>
+    <string name="home_sheet_back_app_line">In the AbsolverOS app inside %1$s, or its Quick Settings tile</string>
     <string name="home_sheet_back_keys">Hold Volume Up + Volume Down</string>
     <string name="home_sheet_back_keys_line">Both together for 3 seconds</string>
     <string name="home_sheet_back_stuck">Stuck on the logo?</string>
@@ -101,20 +101,20 @@
     <string name="home_other_confirm_go">Get it ready</string>
     <string name="home_other_failed">Couldn\'t put it back</string>
     <!-- The app's own update (0.4.41, AppUpdater): a row on Home. -->
-    <string name="home_update_title">Update OneOS to %1$s</string>
+    <string name="home_update_title">Update AbsolverOS to %1$s</string>
     <string name="home_update_downloading">Downloading… %1$d%%</string>
-    <string name="home_update_confirm">OneOS %1$s downloads %3$d MB and installs %2$s with root, or with Android\'s installer when root is off (you confirm it there). The app closes and opens again. Set up your system again afterwards: only the files that changed are downloaded.</string>
+    <string name="home_update_confirm">AbsolverOS %1$s downloads %3$d MB and installs %2$s with root, or with Android\'s installer when root is off (you confirm it there). The app closes and opens again. Set up your system again afterwards: only the files that changed are downloaded.</string>
     <string name="home_update_run">Update</string>
     <!-- 0.4.42: the app's own update as Home's hero (title at most 40 characters). -->
-    <string name="home_app_update_title">OneOS %1$s is available</string>
+    <string name="home_app_update_title">AbsolverOS %1$s is available</string>
     <string name="home_app_update_for_system">Update for %1$s</string>
     <string name="home_app_update_your_phone">on your %1$s</string>
-    <string name="home_app_update_line_system">OneOS %1$s changes %2$s %3$s. Update, then set it up again: only changed files download.</string>
-    <string name="home_app_update_line_notes">OneOS %1$s: %2$s</string>
-    <string name="home_app_update_line">A newer OneOS. Your systems and settings stay as they are.</string>
+    <string name="home_app_update_line_system">AbsolverOS %1$s changes %2$s %3$s. Update, then set it up again: only changed files download.</string>
+    <string name="home_app_update_line_notes">AbsolverOS %1$s: %2$s</string>
+    <string name="home_app_update_line">A newer AbsolverOS. Your systems and settings stay as they are.</string>
     <string name="home_app_update_installing">Installing…</string>
     <!-- 0.4.47: the update banner on the launch screen (systems_screen.xml). -->
-    <string name="systems_update_banner_title">OneOS %1$s is available</string>
+    <string name="systems_update_banner_title">AbsolverOS %1$s is available</string>
     <string name="systems_update_banner_for">Fixes %1$s. Tap Update: only the files that changed download.</string>
     <string name="systems_update_banner_default">Tap Update to install it. Your systems and settings stay as they are.</string>
     <string name="systems_update_banner_failed">The update didn\'t install. Tap to see why.</string>
