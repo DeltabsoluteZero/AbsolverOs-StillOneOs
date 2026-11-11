@@ -11,14 +11,20 @@ jobs:
       - uses: actions/setup-java@v4
         with: { java-version: '21', distribution: 'temurin' }
       - uses: android-actions/setup-android@v3
-      - name: SDK at the path make-overlays expects + tools
+      - name: Android SDK manually at /opt/android-sdk + tools
         run: |
-          sudo ln -sfn "$ANDROID_HOME" /opt/android-sdk
-          yes | sdkmanager --sdk_root=/opt/android-sdk "platforms;android-36" "build-tools;36.0.0" >/dev/null
+          sudo mkdir -p /opt/android-sdk/cmdline-tools
+          curl -sL -o /tmp/clt.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          sudo unzip -q /tmp/clt.zip -d /opt/android-sdk/cmdline-tools
+          sudo mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
+          yes | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk \
+            "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
           sudo apt-get update && sudo apt-get install -y erofs-utils e2fsprogs zip unzip
           curl -Lo ~/apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v2.11.1/apktool_2.11.1.jar
+          mkdir -p ~/.android
           keytool -genkeypair -keystore ~/.android/debug.keystore -storepass android \
             -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+          echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
           echo "EXTRACT_EROFS=$(command -v extract.erofs)" >> $GITHUB_ENV
       - name: Fetch pudding image (public SourceForge)
@@ -47,5 +53,5 @@ jobs:
             -Poneos.testPackagesDir=/tmp/pkg -Poneos.series=hyper -Poneos.packSets=true
       - uses: actions/upload-artifact@v4
         with:
-          name: AbsolverOS-pudding
+          name: AbsolverOS-pudding-debug
           path: app-android/app/build/outputs/apk/full/debug/*.apk
