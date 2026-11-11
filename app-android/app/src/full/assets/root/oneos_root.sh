@@ -447,6 +447,7 @@ profile_set() {
         "a35 hyperos-lhasa") echo hyper-f8u ;;
         "a54 hyperos-lhasa") echo hyper-f8u ;;
         "a07 hyperos-lhasa") echo hyper-f8u ;;
+        "a06 hyperos-lhasa") echo hyper-f8u ;;
         "a17 hyperos-lhasa") echo hyper-f8u ;;
         "a16-4g hyperos-lhasa") echo hyper-f8u ;;
         "a16 hyperos-lhasa") echo hyper-f8u ;;
