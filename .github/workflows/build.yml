@@ -55,7 +55,17 @@ jobs:
       - name: Undo the accidental rename
         run: |
           [ -f "scripts/build-guest-manager.sh --debug" ] && mv "scripts/build-guest-manager.sh --debug" scripts/build-guest-manager.sh || true
-
+          
+      - name: Gradle credentials for GitHub Packages (SESL libs)
+        env:
+          GH_USER: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ~/.gradle
+          printf 'gpr.user=%s\ngpr.key=%s\ngprUser=%s\ngprKey=%s\n' \
+            "$GH_USER" "$GH_TOKEN" "$GH_USER" "$GH_TOKEN" >> ~/.gradle/gradle.properties
+          chmod 600 ~/.gradle/gradle.properties
+          
       - name: Stage guest manager (sign with our own release key)
         run: |
           mkdir -p ~/.oneos-release
