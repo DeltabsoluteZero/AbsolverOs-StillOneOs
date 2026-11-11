@@ -49,18 +49,19 @@ def main(root):
         if re.match(rf"^\s*if-nez {m.group(1)}, :cond_\w+$", lines[j]):
             hits.append((k, j))
             
-    if len(hits) == 0:
-            print("guest_blur_no_thermal: no thermal guard on this build, nothing to patch")
-            return
-        if len(hits) != 1:
-            sys.exit(f"guest_blur_no_thermal: thermal check in updateBlurEnabled() found {len(hits)} times")
+            if len(hits) == 0:
+        print("guest_blur_no_thermal: no thermal guard on this build, nothing to patch")
+        return
+    if len(hits) != 1:
+        sys.exit(f"guest_blur_no_thermal: thermal check in updateBlurEnabled() found {len(hits)} times")
+    k, j = hits[0]
+    del lines[k:j + 1]
             
     k, j = hits[0]
     del lines[k:j + 1]
     open(path, "w").write("\n".join(lines))
     rel = os.path.relpath(path, root).split(os.sep)[0]
     print(rel)
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
