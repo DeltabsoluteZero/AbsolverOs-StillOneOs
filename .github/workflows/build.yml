@@ -31,11 +31,15 @@ jobs:
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
           echo "EXTRACT_EROFS=$(command -v extract.erofs || true)" >> $GITHUB_ENV
 
-      - name: Fetch pudding image from Google Drive (direct file)
+      - name: Fetch pudding image (SourceForge)
         run: |
-          python3 -m pip install -q --upgrade gdown
-          gdown --fuzzy "https://drive.google.com/uc?id=1MXnbLSoZUCWQKIUlX29cvaoAkTI8zLAkg" -O system.img.gz
-          gunzip -c system.img.gz > system.img && rm -f system.img.gz
+          curl -L --retry 5 --retry-all-errors --continue-at - -o gsi.zip \
+            "https://sourceforge.net/projects/mystic-gsi-updates/files/HyperOS/Hyperos-pudding-16-OS3.0.50.2.W-AB-20260122-MysticGSI.zip/download"
+          unzip -o gsi.zip || true
+          IMG=$(find . -maxdepth 3 -name system.img | head -1)
+          [ -s "$IMG" ] && mv "$IMG" system.img
+          [ -s system.img ] || { echo "system.img not in zip"; ls -R | head -40; exit 1; }
+          rm -f gsi.zip
           echo "e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be  system.img" | sha256sum -c -
           
       - name: Undo the accidental rename
