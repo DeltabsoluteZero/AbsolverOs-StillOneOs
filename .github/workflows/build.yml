@@ -55,25 +55,33 @@ jobs:
       - name: Undo the accidental rename
         run: |
           [ -f "scripts/build-guest-manager.sh --debug" ] && mv "scripts/build-guest-manager.sh --debug" scripts/build-guest-manager.sh || true
-          
       - name: Gradle credentials for GitHub Packages (SESL libs)
         env:
           GPR_USER: ${{ github.actor }}
           GPR_KEY: ${{ secrets.PACKAGES_TOKEN }}
         run: |
-          echo "GPR_USER=$GPR_USER"  >> $GITHUB_ENV
-          echo "GPR_KEY=$GPR_KEY"    >> $GITHUB_ENV
+          if [ -z "$GPR_KEY" ]; then
+            echo "::error::PACKAGES_TOKEN secret is EMPTY or not set — create a classic PAT with read:packages and add it as repo secret PACKAGES_TOKEN"
+            exit 1
+          fi
+          echo "token length: ${#GPR_KEY}"
+          # confirm the token is real and has the scope, independent of Gradle
+          curl -s -D - -o /dev/null -H "Authorization: Bearer $GPR_KEY" https://api.github.com/user \
+            | grep -i '^x-oauth-scopes:' || echo "no x-oauth-scopes header (token may be invalid)"
+          echo "GPR_USER=$GPR_USER" >> $GITHUB_ENV
+          echo "GPR_KEY=$GPR_KEY"   >> $GITHUB_ENV
           mkdir -p ~/.gradle/init.d
-          # 1) property form (some builds read these directly)
-          { echo "gpr.user=$GPR_USER"; echo "gpr.key=$GPR_KEY";
-            echo "gprUser=$GPR_USER";  echo "gprKey=$GPR_KEY"; } >> ~/.gradle/gradle.properties
-          # 2) init script: attach creds to every GitHub-Packages repo, whatever the project calls them
+          { echo "gpr.user=$GPR_USER";  echo "gpr.key=$GPR_KEY";
+            echo "gprUser=$GPR_USER";   echo "gprKey=$GPR_KEY";
+            echo "GITHUB_USER=$GPR_USER"; echo "GITHUB_TOKEN=$GPR_KEY"; } >> ~/.gradle/gradle.properties
+          # also expose as -D system props for any build that reads them
+          echo "GRADLE_OPTS=-Dgpr.user=$GPR_USER -Dgpr.key=$GPR_KEY -DgprUser=$GPR_USER -DgprKey=$GPR_KEY" >> $GITHUB_ENV
           cat > ~/.gradle/init.d/gpr.gradle <<'EOF'
           def u = System.getenv('GPR_USER'); def k = System.getenv('GPR_KEY')
           if (u && k) {
             def fix = { repos -> repos.all { r ->
               if (r instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository
-                  && r.url.toString().startsWith('https://maven.pkg.github.com')) {
+                  && r.url.toString().contains('maven.pkg.github.com')) {
                 r.credentials { username = u; password = k }
               }
             } }
@@ -82,21 +90,7 @@ jobs:
           }
           EOF
           chmod 600 ~/.gradle/gradle.properties ~/.gradle/init.d/gpr.gradle
-          
-      - name: Stage guest manager (sign with our own release key)
-        run: |
-          mkdir -p ~/.oneos-release
-          keytool -genkeypair -keystore ~/.oneos-release/oneos.jks -storepass oneos123 \
-            -alias oneos -keypass oneos123 -dname "CN=AbsolverOS" -keyalg RSA -keysize 2048 -validity 10000
-          echo "storeFile=$HOME/.oneos-release/oneos.jks" > ~/.oneos-release/keystore.properties
-          echo "storePassword=oneos123" >> ~/.oneos-release/keystore.properties
-          echo "keyAlias=oneos" >> ~/.oneos-release/keystore.properties
-          echo "keyPassword=oneos123" >> ~/.oneos-release/keystore.properties
-          bash scripts/build-guest-manager.sh release \
-            || bash scripts/build-guest-manager.sh debug \
-            || bash scripts/build-guest-manager.sh
-          ls -l switcher/assets/guest_manager.apk
-
+      
       - name: Generate the matching patch set
         run: bash scripts/make-overlays.sh system.img out/overlays_hyperos_r25
 
