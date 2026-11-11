@@ -1,4 +1,4 @@
-name: Build AbsolverOS (pudding guest)
+name: Build AbsolverOS (pudding)
 on:
   push: { branches: [ main ] }
   workflow_dispatch:
@@ -10,6 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { java-version: '21', distribution: 'temurin' }
+
       - name: Android SDK manually at /opt/android-sdk + tools
         run: |
           sudo mkdir -p /opt/android-sdk/cmdline-tools
@@ -18,7 +19,12 @@ jobs:
           sudo mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
           yes | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk \
             "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
-          sudo apt-get update && sudo apt-get install -y erofs-utils e2fsprogs zip unzip
+          for i in 1 2 3 4 5; do
+            sudo apt-get update -o Acquire::Retries=5 \
+              && sudo apt-get install -y -o Acquire::Retries=5 erofs-utils e2fsprogs zip unzip && break
+            echo "apt attempt $i failed, retrying"; sleep 20
+          done
+          command -v extract.erofs
           curl -Lo ~/apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v2.11.1/apktool_2.11.1.jar
           mkdir -p ~/.android
           keytool -genkeypair -keystore ~/.android/debug.keystore -storepass android \
@@ -26,18 +32,30 @@ jobs:
           echo "ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
           echo "EXTRACT_EROFS=$(command -v extract.erofs)" >> $GITHUB_ENV
-      - name: Fetch pudding image (public SourceForge)
+
+      - name: Fetch pudding image from Google Drive folder
         run: |
-          curl -L --retry 3 -o gsi.zip "https://sourceforge.net/projects/mystic-gsi-updates/files/HyperOS/Hyperos-pudding-16-OS3.0.50.2.W-AB-20260122-MysticGSI.zip/download"
-          unzip -o gsi.zip system.img && rm gsi.zip
-          sha256sum system.img   # expect e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be
+          python3 -m pip install -q gdown
+          gdown --folder "https://drive.google.com/drive/folders/1p1y4Rmm0Do1TYejAF_Kzjlj9rj5l5fv0"
+          ZIP=$(find . -maxdepth 3 -name '*.zip' | head -1)
+          if [ -n "$ZIP" ]; then unzip -o "$ZIP" || true; fi
+          IMG=$(find . -maxdepth 3 -name 'system.img' | head -1)
+          [ -s "$IMG" ] || { echo "no system.img found in the Drive folder"; exit 1; }
+          mv "$IMG" system.img
+          echo "e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be  system.img" | sha256sum -c -
+
       - name: Undo the accidental rename
-        run: mv "scripts/build-guest-manager.sh --debug" scripts/build-guest-manager.sh
+        run: |
+          [ -f "scripts/build-guest-manager.sh --debug" ] && mv "scripts/build-guest-manager.sh --debug" scripts/build-guest-manager.sh || true
+
       - name: Stage guest manager
         run: bash scripts/build-guest-manager.sh
+
       - name: Generate the matching patch set
         run: bash scripts/make-overlays.sh system.img out/overlays_hyperos_r25
+
       - run: rm -f system.img   # free runner disk
+
       - name: Register as a test set (debug only)
         run: |
           mkdir -p /tmp/pkg && cp app-android/packages/* /tmp/pkg/
@@ -45,12 +63,14 @@ jobs:
             for f in *; do [ "$f" = tethering_payload.img ] && continue
               printf '%s%s\n' "$(sha256sum "$f" | cut -d' ' -f1)" "$f"; done ) > /tmp/pkg/hyper-f8u.sha256
           echo "hyper hyper-f8u" > /tmp/pkg/series.txt
+
       - name: Build APK with the set packed in
         run: |
           cd app-android
           ./gradlew assembleFullDebug --no-daemon \
             -Poneos.testPackagesDir=/tmp/pkg -Poneos.series=hyper -Poneos.packSets=true
+
       - uses: actions/upload-artifact@v4
         with:
-          name: AbsolverOS-pudding-debug
+          name: AbsolverOS-pudding
           path: app-android/app/build/outputs/apk/full/debug/*.apk
