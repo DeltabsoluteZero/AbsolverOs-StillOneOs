@@ -1,5 +1,5 @@
 <resources>
-<string name="onboarding_welcome">Welcome to OneOS</string><string name="onboarding_start">Get started</string>
+<string name="onboarding_welcome">Welcome to AbsolverOS</string><string name="onboarding_start">Get started</string>
 <string name="onboarding_prerequisites">Prerequisites</string><string name="onboarding_root">Root provider</string><string name="onboarding_no_root">Root not detected. You can browse available systems.</string>
 <string name="onboarding_nearby">Nearby devices</string><string name="onboarding_nearby_summary">Not required for local switching</string>
 <string name="onboarding_lock">Screen lock</string><string name="onboarding_lock_summary">Switching needs the screen lock off (PIN, pattern, password, fingerprint and face). It keeps One UI\'s data safe if something goes wrong.</string>
