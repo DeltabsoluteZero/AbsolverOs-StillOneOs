@@ -138,7 +138,7 @@ IMAGE_SDK=37
 IMAGES_SDK36="oxygenos16-cph2745"
 # SHA-256 of the method lines of switcher/patches/host_installd.txt: the
 # installd codes the guard jars carry (InstalldExpected.SHA256).
-INSTALLD_SHA=791e52c441b62944f88244a2610b9433c869c9c3916a49f43d14552de82280f2
+INSTALLD_SHA=a7c17883707d98b08a52e53f75f5d8c3b4522ba1cd120026d29308b69da968945977
 # SDK 36 images' sets carry One UI 8.5's codes (host_installd_a16.txt, staged as host_installd.txt;
 # InstalldExpected.SHA256_A16); One UI 8.0's table works with them too (SHA256_A16_ONEUI80).
 INSTALLD_SHA_36=a7c17883707d9b0b85e3f75f6d83cb4522ba1d120026d29308b69da968945977
