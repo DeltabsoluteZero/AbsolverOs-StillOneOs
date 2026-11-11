@@ -33,7 +33,7 @@
     <string name="home_welcome">Welcome back</string>
     <string name="home_welcome_line_short">%1$s</string>
     <string name="home_minutes">%1$d min</string>
-    <string name="home_send_report">Send report to the OneOS team</string>
+    <string name="home_send_report">Send report to the AbsolverOS team</string>
     <string name="home_send_report_summary">Personal info is removed first: numbers, Wi-Fi names, accounts.</string>
     <string name="home_dismiss">Dismiss</string>
     <string name="home_details">Details</string>
@@ -95,7 +95,7 @@
     <string name="last_forget_title">Done with this session</string>
 
     <!-- About -->
-    <string name="about_title">About OneOS</string>
+    <string name="about_title">About AbsolverOS</string>
 
     <!-- Switch confirm (the redesign, step 4): a dialog from Home. -->
     <string name="confirm_switch_title">Switch to %1$s?</string>
@@ -123,7 +123,7 @@
     <string name="confirm_choose_download">Choose the %1$s download</string>
 
     <!-- What the fix buttons say when they cannot do it themselves. -->
-    <string name="fix_open_root_app">Open your root app and allow OneOS.</string>
+    <string name="fix_open_root_app">Open your root app and allow AbsolverOS.</string>
     <string name="fix_no_app">No app found to open this</string>
     <!-- 0.4.43 (UX audit): the pre-boot button when a check stops the switch and has nothing to tap. -->
     <string name="environment_what_stops">What stops the switch</string>
