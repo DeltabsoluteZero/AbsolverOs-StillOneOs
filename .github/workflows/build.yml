@@ -34,13 +34,23 @@ jobs:
         run: |
           python3 -m pip install -q gdown
           gdown --folder "https://drive.google.com/drive/folders/1p1y4Rmm0Do1TYejAF_Kzjlj9rj5l5fv0"
+          GZ=$(find . -maxdepth 3 \( -name '*.img.gz' -o -name '*.gz' \) | head -1)
           ZIP=$(find . -maxdepth 3 -name '*.zip' | head -1)
-          if [ -n "$ZIP" ]; then unzip -o "$ZIP" || true; fi
-          IMG=$(find . -maxdepth 3 -name 'system.img' | head -1)
-          [ -s "$IMG" ] || { echo "no system.img found in the Drive folder"; exit 1; }
-          mv "$IMG" system.img
+          if [ -n "$GZ" ]; then
+            gunzip -c "$GZ" > system.img && rm -f "$GZ"
+          elif [ -n "$ZIP" ]; then
+            unzip -o "$ZIP" || true
+            GZ=$(find . -maxdepth 3 \( -name '*.img.gz' -o -name '*.gz' \) | head -1)
+            [ -n "$GZ" ] && { gunzip -c "$GZ" > system.img && rm -f "$GZ"; }
+          fi
+          if [ ! -s system.img ]; then
+            IMG=$(find . -maxdepth 3 -name 'system.img' | head -1)
+            [ -s "$IMG" ] && mv "$IMG" system.img
+          fi
+          [ -s system.img ] || { echo "no system.img / .gz found in the Drive folder"; exit 1; }
           echo "e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be  system.img" | sha256sum -c -
-
+          df -h . | tail -1
+          
       - name: Undo the accidental rename
         run: |
           [ -f "scripts/build-guest-manager.sh --debug" ] && mv "scripts/build-guest-manager.sh --debug" scripts/build-guest-manager.sh || true
