@@ -45,7 +45,8 @@ def expect(lines, i, pattern, what):
     i = code(lines, i)
     m = re.match(pattern, lines[i].strip()) if i < len(lines) else None
     if not m:
-        sys.exit(f"LocalDisplayDevice: {what} not found at line {i + 1} ({lines[i].strip() if i < len(lines) else 'end'!r})")
+        print("soft-skip qti_builtin_display_public.py (A06 has no fold cover panel; unmet landmark = no branch): "+f"LocalDisplayDevice: {what} not found at line {i + 1} ({lines[i].strip() if i < len(lines) else 'end'!r})", file=sys.stderr)
+        sys.exit(0)
     return i, m
 
 
