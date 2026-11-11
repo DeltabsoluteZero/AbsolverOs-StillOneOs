@@ -36,9 +36,12 @@ jobs:
           curl -L --retry 5 --retry-all-errors --continue-at - -o gsi.zip \
             "https://sourceforge.net/projects/mystic-gsi-updates/files/HyperOS/Hyperos-pudding-16-OS3.0.50.2.W-AB-20260122-MysticGSI.zip/download"
           unzip -o gsi.zip || true
-          IMG=$(find . -maxdepth 3 -name system.img | head -1)
-          [ -s "$IMG" ] && mv "$IMG" system.img
-          [ -s system.img ] || { echo "system.img not in zip"; ls -R | head -40; exit 1; }
+          # only relocate if the zip put it somewhere other than cwd
+          if [ ! -s system.img ]; then
+            IMG=$(find . -maxdepth 3 -name system.img | head -1)
+            [ -n "$IMG" ] && [ "$IMG" != "./system.img" ] && [ "$IMG" != "system.img" ] && mv "$IMG" system.img
+          fi
+          [ -s system.img ] || { echo "system.img not found"; ls -R | head -40; exit 1; }
           rm -f gsi.zip
           echo "e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be  system.img" | sha256sum -c -
           
