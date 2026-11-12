@@ -149,17 +149,17 @@ jobs:
 
       - name: Register as a test set (debug only)
         run: |
-          mkdir -p /tmp/pkg && cp app-android/packages/* /tmp/pkg/
+          mkdir -p $GITHUB_WORKSPACE/app-android/_pkg_tmp && cp app-android/packages/* $GITHUB_WORKSPACE/app-android/_pkg_tmp/
           ( cd out/overlays_hyperos_r25
             for f in *; do [ "$f" = tethering_payload.img ] && continue
-              sha256sum "$f"; done ) > /tmp/pkg/hyper-f8u.sha256
-          echo "hyper hyper-f8u" > /tmp/pkg/series.txt
+              sha256sum "$f"; done ) > $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u.sha256
+          echo "hyper hyper-f8u" > $GITHUB_WORKSPACE/app-android/_pkg_tmp/series.txt
 
       - name: Build APK with the set packed in
         run: |
           cd app-android
           ./gradlew assembleFullDebug --no-daemon \
-            -Poneos.testPackagesDir=/tmp/pkg -Poneos.series=hyper -Poneos.packSets=true
+            -Poneos.testPackagesDir=$GITHUB_WORKSPACE/app-android/_pkg_tmp -Poneos.series=hyper -Poneos.packSets=true
 
       - uses: actions/upload-artifact@v4
         with:
