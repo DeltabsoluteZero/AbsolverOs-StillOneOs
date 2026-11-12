@@ -33,12 +33,26 @@ jobs:
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
           echo "EXTRACT_EROFS=$(command -v extract.erofs || true)" >> $GITHUB_ENV
 
-      - name: Fetch pudding image (PixelDrain)
+      - name: Fetch pudding image from Google Drive folder
         run: |
-          curl -L --retry 5 -o system.img.gz "https://pixeldrain.com/api/file/XkWxFdSw?download"
-          file system.img.gz | grep -q gzip || { echo "Downloaded file is not gzip (maybe HTML error page?)"; head -c 200 system.img.gz; exit 1; }
-          gunzip -c system.img.gz > system.img && rm -f system.img.gz
+          python3 -m pip install -q gdown
+          gdown --folder "https://drive.google.com/drive/folders/1p1y4Rmm0Do1TYejAF_Kzjlj9rj5l5fv0"
+          GZ=$(find . -maxdepth 3 \( -name '*.img.gz' -o -name '*.gz' \) | head -1)
+          ZIP=$(find . -maxdepth 3 -name '*.zip' | head -1)
+          if [ -n "$GZ" ]; then
+            gunzip -c "$GZ" > system.img && rm -f "$GZ"
+          elif [ -n "$ZIP" ]; then
+            unzip -o "$ZIP" || true
+            GZ=$(find . -maxdepth 3 \( -name '*.img.gz' -o -name '*.gz' \) | head -1)
+            [ -n "$GZ" ] && { gunzip -c "$GZ" > system.img && rm -f "$GZ"; }
+          fi
+          if [ ! -s system.img ]; then
+            IMG=$(find . -maxdepth 3 -name 'system.img' | head -1)
+            [ -s "$IMG" ] && mv "$IMG" system.img
+          fi
+          [ -s system.img ] || { echo "no system.img / .gz found in the Drive folder"; exit 1; }
           echo "e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be  system.img" | sha256sum -c -
+          df -h . | tail -1
           
       - name: Undo the accidental rename
         run: |
