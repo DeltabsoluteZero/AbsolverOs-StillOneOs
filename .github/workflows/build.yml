@@ -1,4 +1,4 @@
-name: Build AbsolverOS (pudding)
+name: Build AbsolverOS (pudding0.4.89)
 on:
   push: { branches: [ main ] }
   workflow_dispatch:
