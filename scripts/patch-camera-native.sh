@@ -28,6 +28,8 @@ for pair in "$1:libcamera_client_patched.so" "$2:libcameracompatbilityinfo_patch
         [ -f "$OUT/guards.txt" ] && (cd "$OUT" && sha256sum "$name") >> "$OUT/guards.txt"
         echo "built $OUT/$name"
     else
-        echo "$name: not needed (the guest's tables are One UI's)"
+        echo "$name: not needed (the guest's tables are One UI's); shipping unpatched copy to satisfy the set manifest"
+    cp -f "$src" "$OUT/$name"
+    chmod 644 "$OUT/$name"
     fi
 done

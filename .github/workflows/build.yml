@@ -160,6 +160,7 @@ jobs:
           ( cd out/overlays_hyperos_r25
             for f in *; do [ "$f" = tethering_payload.img ] && continue
               sha256sum "$f"; done ) > $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u.sha256
+          cp -f $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u.sha256 $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u_guards.txt
           echo "hyper hyper-f8u" > $GITHUB_WORKSPACE/app-android/_pkg_tmp/series.txt
           
       - name: Ensure .android dir exists
