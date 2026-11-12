@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: pudding.bin
-          key: pudding-absolver-v1
+          key: pudding-absolver-v2
 
       - name: Seed pudding archive (cache miss only)
         if: steps.pudcache.outputs.cache-hit != 'true'
@@ -54,7 +54,7 @@ jobs:
             echo "PD_API_KEY not set; seeding via SourceForge (slower, still one-time)"
             curl -L --retry 8 --retry-all-errors --retry-delay 5 --continue-at - -o pudding.bin.part "$URL_SF"
           fi
-          test -s pudding.bin.part && mv pudding.bin.part pudding.bin || { rm -f pudding.bin.part; echo "seed incomplete"; exit 1; }
+          file pudding.bin.part | grep -qE "gzip|Zip archive" && mv pudding.bin.part pudding.bin || { rm -f pudding.bin.part; echo "seed is not an archive (captcha wall or bad URL)"; exit 1; }
 
       - name: Extract + report pudding image
         run: |
