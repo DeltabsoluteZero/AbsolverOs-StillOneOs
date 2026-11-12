@@ -97,7 +97,14 @@ jobs:
             printf 'storeFile=%s\nstorePassword=oneos123\nkeyAlias=oneos\nkeyPassword=oneos123\n' "$JKS" > "$d/keystore.properties"
           done
           bash scripts/build-guest-manager.sh release
-          echo "staged guest_manager.apk sha:"; sha256sum switcher/assets/guest_manager.apk
+          SRC=switcher/assets/guest_manager.apk
+          mkdir -p app-android/switcher/assets
+          cp -f "$SRC" app-android/switcher/assets/guest_manager.apk 2>/dev/null || true
+          echo "== diagnostics =="; pwd
+          ls -la scripts/build-guest-manager.sh
+          ls -la "$SRC" app-android/switcher/assets/guest_manager.apk 2>/dev/null
+          ls -la app-android/guest/build/outputs/apk/release/ 2>/dev/null | head
+          sha256sum "$SRC" app-android/switcher/assets/guest_manager.apk app-android/guest/build/outputs/apk/release/guest-release.apk 2>/dev/null
 
       - name: Gradle credentials for GitHub Packages (SESL libs)
         env:
