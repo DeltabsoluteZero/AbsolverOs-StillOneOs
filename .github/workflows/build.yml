@@ -156,6 +156,7 @@ jobs:
       - name: Register as a test set (debug only)
         run: |
           mkdir -p $GITHUB_WORKSPACE/app-android/_pkg_tmp && cp app-android/packages/* $GITHUB_WORKSPACE/app-android/_pkg_tmp/
+          [ -f out/overlays_hyperos_r25/guards.txt ] && cp -f out/overlays_hyperos_r25/guards.txt $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u_guards.txt || true
           ( cd out/overlays_hyperos_r25
             for f in *; do [ "$f" = tethering_payload.img ] && continue
               sha256sum "$f"; done ) > $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u.sha256
