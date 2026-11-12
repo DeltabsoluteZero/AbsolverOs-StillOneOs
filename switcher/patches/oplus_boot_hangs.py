@@ -43,9 +43,6 @@ DUMP_START = """    const-string v0, "ctl.start"
 def find(root, rel_suffix):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(rel_suffix)]
-    if len(hits) == 0:
-        print("soft-skip oplus_boot_hangs.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {rel_suffix}, found {len(hits)}")
     return hits[0]
@@ -145,16 +142,10 @@ def fix_tp_info(root):
         path = find(root, rel)
         lines = open(path).read().split("\n")
         idx = [i for i, l in enumerate(lines) if l == header]
-        if len(idx) == 0:
-            print("soft-skip oplus_boot_hangs.py: 0 hits, nothing to patch")
-            return
         if len(idx) != 1:
             sys.exit(f"{rel}: getTpInfo not found as expected")
         end = lines.index(".end method", idx[0])
         hits = [i for i in range(idx[0], end) if lines[i] == TP_SET]
-        if len(hits) == 0:
-            print("soft-skip oplus_boot_hangs.py: 0 hits, nothing to patch")
-            return
         if len(hits) != 1:
             sys.exit(f"{rel}: expected one SystemProperties.set in getTpInfo, found {len(hits)}")
         lines[hits[0]] = "    # OneOS: no gettpinfo service in the host's init; ctl.start threw (run 33)."

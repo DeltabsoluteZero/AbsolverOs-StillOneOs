@@ -91,9 +91,6 @@ def entry(lines, i):
 def guard_method(lines, header_re, name, rel):
     """Make the matched method return false at entry; returns True once done."""
     heads = [k for k, l in enumerate(lines) if header_re.match(l)]
-    if len(heads) == 0:
-        print("soft-skip guest_no_gatekeeper.py: 0 hits, nothing to patch")
-        return
     if len(heads) != 1:
         sys.exit(f"{rel}: {name} found {len(heads)} times, expected once")
     i = heads[0]

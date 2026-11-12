@@ -64,9 +64,6 @@ def find(root, rel):
             path = os.path.join(dirpath, name)
             if path.endswith(rel):
                 hits.append(path)
-    if len(hits) == 0:
-        print("soft-skip guest_sec_ims_signature.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {rel}, found {len(hits)}")
     return hits[0]
@@ -79,9 +76,6 @@ def main(root):
         sys.exit(f"{path}: already carries the com.sec.imsservice carve-out")
 
     starts = [i for i, l in enumerate(lines) if l == METHOD]
-    if len(starts) == 0:
-        print("soft-skip guest_sec_ims_signature.py: 0 hits, nothing to patch")
-        return
     if len(starts) != 1:
         sys.exit(f"{path}: verifySignatures(PackageSetting, SharedUserSetting, ...) not found exactly once")
     start = starts[0]
@@ -105,9 +99,6 @@ def main(root):
 
     # The register the package name lives in (getPackageName() -> move-result-object).
     gp = [i for i in body if lines[i].strip() == GETNAME]
-    if len(gp) == 0:
-        print("soft-skip guest_sec_ims_signature.py: 0 hits, nothing to patch")
-        return
     if len(gp) != 1:
         sys.exit(f"{path}: getPackageName() on p0 not found exactly once in verifySignatures")
     j = gp[0] + 1
@@ -125,9 +116,6 @@ def main(root):
     # method. The throw this patch guards is the one that reports that message, so
     # take the nearest exception built before it.
     msg_lines = [k for k in body if MSG in lines[k]]
-    if len(msg_lines) == 0:
-        print("soft-skip guest_sec_ims_signature.py: 0 hits, nothing to patch")
-        return
     if len(msg_lines) != 1:
         sys.exit(f"{path}: '{MSG.strip()}' is in verifySignatures {len(msg_lines)} times, expected once")
     msg_line = msg_lines[0]

@@ -39,9 +39,6 @@ def norm(body):
 def main(root):
     paths = [os.path.join(root, d, CLASS) for d in sorted(os.listdir(root))
              if d.startswith("smali") and os.path.isfile(os.path.join(root, d, CLASS))]
-    if len(paths) == 0:
-        print("soft-skip guest_secims_gba.py: 0 hits, nothing to patch")
-        return
     if len(paths) != 1:
         sys.exit(f"TelephonyManager found {len(paths)} times")
     path = paths[0]
@@ -50,9 +47,6 @@ def main(root):
         # apktool writes the stand-ins back with a hidden-API flag (whitelist, ...) and blank lines.
         pat = re.compile(r"^(\.method public (?:[\w-]+ )?" + re.escape(sig) + r")\n(.*?)\n\.end method", re.S | re.M)
         found = pat.findall(text)
-        if len(found) == 0:
-            print("soft-skip guest_secims_gba.py: 0 hits, nothing to patch")
-            return
         if len(found) != 1:
             sys.exit(f"{sig}: found {len(found)} times")
         if norm(found[0][1]) != norm(old):

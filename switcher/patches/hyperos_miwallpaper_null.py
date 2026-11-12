@@ -36,17 +36,11 @@ def main():
     root = sys.argv[1]
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + REL)]
-    if len(hits) == 0:
-        print("soft-skip hyperos_miwallpaper_null.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {REL}, found {len(hits)}")
     path = hits[0]
     lines = open(path).read().split("\n")
     idx = [i for i, l in enumerate(lines) if l == HEADER]
-    if len(idx) == 0:
-        print("soft-skip hyperos_miwallpaper_null.py: 0 hits, nothing to patch")
-        return
     if len(idx) != 1:
         sys.exit("WallpaperTypeUtils.f(String) not found")
     end = lines.index(".end method", idx[0])

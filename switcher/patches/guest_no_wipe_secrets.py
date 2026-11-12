@@ -74,9 +74,6 @@ def classes(root):
 
 def stub(lines, sig, label, path):
     heads = [i for i, l in enumerate(lines) if l.startswith(".method ") and " static " in f" {l} " and l.endswith(" " + sig)]
-    if len(heads) == 0:
-        print("soft-skip guest_no_wipe_secrets.py: 0 hits, nothing to patch")
-        return
     if len(heads) != 1:
         sys.exit(f"{path}: static {sig} found {len(heads)} times, expected once")
     i = heads[0]

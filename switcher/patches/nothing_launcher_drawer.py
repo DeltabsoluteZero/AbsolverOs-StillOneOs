@@ -32,9 +32,6 @@ FIELD = ".field public oneosCols:I"
 def find(root, rel):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + rel)]
-    if len(hits) == 0:
-        print("soft-skip nothing_launcher_drawer.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {rel}, found {len(hits)}")
     return hits[0]
@@ -42,9 +39,6 @@ def find(root, rel):
 
 def method(lines, header):
     idx = [i for i, l in enumerate(lines) if l == header]
-    if len(idx) == 0:
-        print("soft-skip nothing_launcher_drawer.py: 0 hits, nothing to patch")
-        return
     if len(idx) != 1:
         sys.exit(f"{header} not found once")
     return idx[0], lines.index(".end method", idx[0])
@@ -52,9 +46,6 @@ def method(lines, header):
 
 def one(lines, start, end, text):
     hits = [i for i in range(start, end) if lines[i] == text]
-    if len(hits) == 0:
-        print("soft-skip nothing_launcher_drawer.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected one '{text.strip()}' in the method, found {len(hits)}; left as it is")
     return hits[0]
@@ -150,9 +141,6 @@ def patch_z(path):
     iput v2, p0, %s->oneosCols:I""".replace("%s", Z).split("\n")
 
     fields = [i for i, l in enumerate(lines) if l.startswith(".field private n:I")]
-    if len(fields) == 0:
-        print("soft-skip nothing_launcher_drawer.py: 0 hits, nothing to patch")
-        return
     if len(fields) != 1:
         sys.exit("smart/z has no field n to put oneosCols after")
     lines[fields[0] + 1:fields[0] + 1] = ["", FIELD]

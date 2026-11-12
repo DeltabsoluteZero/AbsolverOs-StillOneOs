@@ -28,9 +28,6 @@ def main(root):
             heads = [k for k, l in enumerate(lines) if HEADER.match(l)]
             if not heads:
                 continue
-            if len(heads) == 0:
-                print("soft-skip guest_no_sysrq_crash.py: 0 hits, nothing to patch")
-                return
             if len(heads) != 1:
                 sys.exit(f"{name}: doSysRq(C) found more than once")
             i = heads[0]

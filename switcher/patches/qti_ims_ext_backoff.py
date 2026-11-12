@@ -35,9 +35,6 @@ NEW = "    const-wide/32 {}, 0xea60"
 def find(root, rel_suffix):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(rel_suffix)]
-    if len(hits) == 0:
-        print("soft-skip qti_ims_ext_backoff.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {rel_suffix}, found {len(hits)}")
     return hits[0]
@@ -48,16 +45,10 @@ def main():
     path = find(root, os.path.join("org", "codeaurora", "ims", "QtiImsExtConnector.smali"))
     lines = open(path).read().split("\n")
     idx = [i for i, l in enumerate(lines) if l == HEADER]
-    if len(idx) == 0:
-        print("soft-skip qti_ims_ext_backoff.py: 0 hits, nothing to patch")
-        return
     if len(idx) != 1:
         sys.exit("QtiImsExtConnector.bindQtiImsExtService not found")
     end = lines.index(".end method", idx[0])
     hits = [i for i in range(idx[0], end) if OLD.match(lines[i])]
-    if len(hits) == 0:
-        print("soft-skip qti_ims_ext_backoff.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected one 500 ms retry delay in bindQtiImsExtService, found {len(hits)}")
     reg = OLD.match(lines[hits[0]]).group(1)

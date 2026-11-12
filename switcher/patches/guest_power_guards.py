@@ -45,9 +45,6 @@ def find(root, rel_suffix):
             path = os.path.join(dirpath, name)
             if path.endswith(rel_suffix):
                 hits.append(path)
-    if len(hits) == 0:
-        print("soft-skip guest_power_guards.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {rel_suffix}, found {len(hits)}")
     return hits[0]
@@ -74,9 +71,6 @@ def guard_shutdown_thread(root):
     for sig in ENTRY_POINTS:
         header = f".method public static {sig}"
         idx = [i for i, l in enumerate(lines) if l == header]
-        if len(idx) == 0:
-            print("soft-skip guest_power_guards.py: 0 hits, nothing to patch")
-            return
         if len(idx) != 1:
             sys.exit(f"ShutdownThread: {sig} not found exactly once")
         i = idx[0] + 1
@@ -152,9 +146,6 @@ def guard_recovery(root):
     lines = open(path).read().split("\n")
     for sig in RECOVERY_METHODS:
         idx = [i for i, l in enumerate(lines) if l.startswith(".method ") and l.endswith(sig)]
-        if len(idx) == 0:
-            print("soft-skip guest_power_guards.py: 0 hits, nothing to patch")
-            return
         if len(idx) != 1:
             sys.exit(f"RecoverySystemService: {sig} not found exactly once")
         i = idx[0] + 1

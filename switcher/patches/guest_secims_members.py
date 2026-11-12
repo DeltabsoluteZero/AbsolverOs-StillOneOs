@@ -188,9 +188,6 @@ def find(root, cls):
     rel = cls[1:-1] + ".smali"
     hits = [os.path.join(root, d, rel) for d in sorted(os.listdir(root))
             if d.startswith("smali") and os.path.isfile(os.path.join(root, d, rel))]
-    if len(hits) == 0:
-        print("soft-skip guest_secims_members.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"{cls}: found {len(hits)} times, expected once")
     return hits[0]
@@ -236,9 +233,6 @@ def main(root):
                     if l.startswith(".field ") and f" {name}:" in l] if sup else []
             if len(shit) == 1 and " private " not in shit[0]:
                 continue
-        if len(hit) == 0:
-            print("soft-skip guest_secims_members.py: 0 hits, nothing to patch")
-            return
         if len(hit) != 1:
             sys.exit(f"{cls}.{name}: declared {len(hit)} times, expected once")
         line = lines[hit[0]]

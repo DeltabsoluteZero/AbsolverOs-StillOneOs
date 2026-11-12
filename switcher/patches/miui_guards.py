@@ -100,9 +100,6 @@ LOCALS = re.compile(r"^(\s*)\.locals (\d+)$", re.M)
 def find(root, cls):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(cls + ".smali")]
-    if len(hits) == 0:
-        print("soft-skip miui_guards.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"{cls}: {len(hits)} classes found, expected one")
     return hits[0]
@@ -273,9 +270,6 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     pro = "--proinstaller" in args
     args = [a for a in args if a != "--proinstaller"]
-    if len(args) == 0:
-        print("soft-skip miui_guards.py: 0 hits, nothing to patch")
-        return
     if len(args) != 1:
         sys.exit("usage: miui_guards.py [--proinstaller] <decoded jar directory>")
     main(args[0], pro)

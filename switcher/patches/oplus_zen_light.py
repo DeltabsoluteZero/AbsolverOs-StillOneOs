@@ -31,9 +31,6 @@ def main():
     suffix = os.path.join("com", "android", "server", "zenmode", "ZenModeManagerExtImpl.smali")
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + suffix)]
-    if len(hits) == 0:
-        print("soft-skip oplus_zen_light.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected one ZenModeManagerExtImpl.smali, found {len(hits)}")
     path = hits[0]
@@ -41,9 +38,6 @@ def main():
     if ":oneos_no_zen_light" in smali:
         sys.exit("ZenModeManagerExtImpl already patched")
     found = CALL.findall(smali)
-    if len(found) == 0:
-        print("soft-skip oplus_zen_light.py: 0 hits, nothing to patch")
-        return
     if len(found) != 1:
         sys.exit(f"ZenModeManagerExtImpl: expected one mNotificationLight.turnOff() call, found {len(found)}")
     smali = CALL.sub(lambda m: (m.group(1) + m.group(3) +

@@ -69,9 +69,6 @@ PATCHED = """    .locals 2
 def find(root):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.path.join("com", "android", "server", "webkit", "SystemImpl.smali"))]
-    if len(hits) == 0:
-        print("soft-skip guest_webview_zygote_safe.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"SystemImpl.smali: {len(hits)} matches")
     return hits[0]

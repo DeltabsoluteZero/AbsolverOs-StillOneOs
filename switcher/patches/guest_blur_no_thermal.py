@@ -30,17 +30,11 @@ def main(root):
             path = os.path.join(dirpath, "BlurController.smali")
             if CLASS.match(open(path).readline().strip()):
                 found.append(path)
-    if len(found) == 0:
-        print("soft-skip guest_blur_no_thermal.py: 0 hits, nothing to patch")
-        return
     if len(found) != 1:
         sys.exit(f"guest_blur_no_thermal: BlurController found {len(found)} times")
     path = found[0]
     lines = open(path).read().split("\n")
     heads = [k for k, l in enumerate(lines) if METHOD.match(l)]
-    if len(heads) == 0:
-        print("soft-skip guest_blur_no_thermal.py: 0 hits, nothing to patch")
-        return
     if len(heads) != 1:
         sys.exit("guest_blur_no_thermal: updateBlurEnabled() not found exactly once")
     end = next(k for k in range(heads[0], len(lines)) if lines[k] == ".end method")
@@ -54,10 +48,6 @@ def main(root):
             j += 1
         if re.match(rf"^\s*if-nez {m.group(1)}, :cond_\w+$", lines[j]):
             hits.append((k, j))
-            
-    if len(hits) == 0:
-        print("guest_blur_no_thermal: no thermal guard on this build, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"guest_blur_no_thermal: thermal check in updateBlurEnabled() found {len(hits)} times")
     k, j = hits[0]
@@ -65,6 +55,7 @@ def main(root):
     open(path, "w").write("\n".join(lines))
     rel = os.path.relpath(path, root).split(os.sep)[0]
     print(rel)
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

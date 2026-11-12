@@ -66,9 +66,6 @@ def main():
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     hits = glob.glob(os.path.join(sys.argv[1], "smali*", CLASS))
-    if len(hits) == 0:
-        print("soft-skip hyperos_telephony.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"hyperos_telephony: {CLASS} found {len(hits)} times (one expected)")
     path = hits[0]

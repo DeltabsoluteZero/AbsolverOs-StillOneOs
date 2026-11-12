@@ -318,9 +318,6 @@ def body_start(lines, i, end):
 def check_error_unknown(lines, i, end):
     """The method's own refusal of an invalid user type uses USER_OPERATION_ERROR_UNKNOWN = 1."""
     anchor = [k for k in range(i, end) if '"Cannot create user of invalid user type: "' in lines[k]]
-    if len(anchor) == 0:
-        print("soft-skip guest_no_new_users.py: 0 hits, nothing to patch")
-        return
     if len(anchor) != 1:
         sys.exit("createUserInternalUncheckedNoTracing: invalid user type message not found exactly once")
     call = next((k for k in range(anchor[0], end) if lines[k].strip().endswith(THROW_HELPER)), None)
@@ -337,9 +334,6 @@ def check_error_unknown(lines, i, end):
 def main(root):
     defs, edges, callers, files = scan(root)
     ums = [p for p, ls in files.items() if any(l.startswith(".class ") and l.split()[-1] == CLS for l in ls)]
-    if len(ums) == 0:
-        print("soft-skip guest_no_new_users.py: 0 hits, nothing to patch")
-        return
     if len(ums) != 1:
         sys.exit(f"expected one UserManagerService.smali, found {len(ums)}")
     path = ums[0]
@@ -353,9 +347,6 @@ def main(root):
     funnel, unchecked = found[0]
     header = re.compile(rf"^\.method {MODS}" + re.escape(funnel.split("->", 1)[1]) + "$")
     heads = [k for k, l in enumerate(lines) if header.match(l)]
-    if len(heads) == 0:
-        print("soft-skip guest_no_new_users.py: 0 hits, nothing to patch")
-        return
     if len(heads) != 1:
         sys.exit(f"{path}: createUserInternalUncheckedNoTracing found {len(heads)} times, expected once")
     i = heads[0]

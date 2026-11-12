@@ -34,9 +34,6 @@ ANCHOR = re.compile(r"^(    new-instance (v\d+), Ljava/lang/StringBuilder;\n\n"
 def find(root, rel_suffix):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(rel_suffix)]
-    if len(hits) == 0:
-        print("soft-skip oplus_resolution_tables.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"{rel_suffix}: {len(hits)} matches")
     return hits[0]
@@ -63,9 +60,6 @@ def main():
         sys.exit("OplusResolutionManagerFeature: init(WindowManagerService, Context) not found")
     body = smali[start:end]
     hits = ANCHOR.findall(body)
-    if len(hits) == 0:
-        print("soft-skip oplus_resolution_tables.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"OplusResolutionManagerFeature.init: {len(hits)} support log lines, expected 1")
     reg = hits[0][1]

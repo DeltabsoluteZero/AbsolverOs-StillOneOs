@@ -96,17 +96,11 @@ def main():
     root = sys.argv[1]
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + CLASS)]
-    if len(hits) == 0:
-        print("soft-skip nothing_qs_density.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected exactly one {CLASS}, found {len(hits)}")
     path = hits[0]
     lines = open(path).read().split("\n")
     idx = [i for i, l in enumerate(lines) if l == HEADER]
-    if len(idx) == 0:
-        print("soft-skip nothing_qs_density.py: 0 hits, nothing to patch")
-        return
     if len(idx) != 1:
         sys.exit("CellLayoutKt.getQsRenderDensityDpi()I not found")
     start = idx[0]
@@ -118,9 +112,6 @@ def main():
     # physicalPortraitWidthPx() must still be the static min(widthPixels, heightPixels)
     # of Resources.getSystem(), whose densityDpi the new body reads alongside it.
     pw = [i for i, l in enumerate(lines) if l == ".method public static final physicalPortraitWidthPx()I"]
-    if len(pw) == 0:
-        print("soft-skip nothing_qs_density.py: 0 hits, nothing to patch")
-        return
     if len(pw) != 1:
         sys.exit("CellLayoutKt.physicalPortraitWidthPx()I not found")
     pw_body = "\n".join(lines[pw[0]:lines.index(".end method", pw[0])])

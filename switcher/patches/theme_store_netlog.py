@@ -281,9 +281,6 @@ def main(root):
         p = os.path.join(root, d, BUILDER)
         if d.startswith("smali") and os.path.isfile(p):
             hits.append((d, p))
-    if len(hits) == 0:
-        print("soft-skip theme_store_netlog.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected one {BUILDER}, found {len(hits)}")
     smali_dir, path = hits[0]

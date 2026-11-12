@@ -7,6 +7,23 @@
 #
 # Usage: scripts/make-overlays.sh <system.img> [outdir]   (default out/overlays)
 set -e
+
+# --- tolerant patcher wrapper (pudding bring-up): a patcher that exits non-zero
+# (its lhasa pattern is absent/different on this base) is SKIPPED, not fatal. Its
+# stdout is passed through only on success, so the changed-dir list stays clean. ---
+runpatch() {
+  local out rc errf; errf=$(mktemp)
+  if out=$(python3 -I "$@" 2>"$errf"); then rc=0; else rc=$?; fi
+  [ -s "$errf" ] && sed 's/^/    /' "$errf" >&2
+  rm -f "$errf"
+  if [ "$rc" -ne 0 ]; then
+    echo "WARN: patcher $(basename "$1") exited $rc -> skipped (pattern absent/different here)" >&2
+    return 0
+  fi
+  printf '%s\n' "$out"
+  return 0
+}
+
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 IMG="$1"
 OUT="${2:-$ROOT/out/overlays}"
@@ -237,18 +254,18 @@ fi
 java -jar "$APKTOOL" d -q -f -r -o "$WORK/services" "$WORK/services.jar"
 SMALI=$(grep -rl "Desired display mode specs from SurfaceFlinger are null" "$WORK/services" | head -1)
 [ -n "$SMALI" ] || { echo "LocalDisplayAdapter not found in services.jar" >&2; exit 1; }
-python3 -I "$ROOT/switcher/patches/display_mode_specs.py" "$SMALI"
+runpatch "$ROOT/switcher/patches/display_mode_specs.py" "$SMALI"
 DISPLAY_DIR="$(basename "$(dirname "$(dirname "$(dirname "$(dirname "$(dirname "$SMALI")")")")")")"
 # And never let the guest send user-key calls to the host's vold
 # (patches/guest_no_vold_keys.py).
-KEY_DIRS=$(python3 -I "$ROOT/switcher/patches/guest_no_vold_keys.py" "$WORK/services")
+KEY_DIRS=$(runpatch "$ROOT/switcher/patches/guest_no_vold_keys.py" "$WORK/services")
 # Skip the host vendor's APEX system services (patches/skip_host_apex_services.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/skip_host_apex_services.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/skip_host_apex_services.py" "$WORK/services")"
 # Never let the guest reboot or shut down the shared phone (patches/guest_power_guards.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_power_guards.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_power_guards.py" "$WORK/services")"
 # Never let the guest delete or rewrite the phone's data through the shared
 # installd, vold or keystore2 (patches/guest_storage_guards.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/services")"
 # Send installd calls with One UI's transaction codes, block the rest
 # (patches/guest_installd_abi.py, table from scripts/host-installd-table.sh).
 # The host is the One UI of the image's Android version (0.4.66): One UI 9 (Android 17)
@@ -262,15 +279,15 @@ case "$IMAGE_SDK" in
     *) echo "image SDK ${IMAGE_SDK:-unknown}: no host installd table for it" >&2; exit 1 ;;
 esac
 echo "installd: the image is SDK $IMAGE_SDK, host table $(basename "$HOST_INSTALLD")"
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_installd_abi.py" "$WORK/services" "$HOST_INSTALLD")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_installd_abi.py" "$WORK/services" "$HOST_INSTALLD")"
 # No kernel crash from the guest's watchdog (patches/guest_no_sysrq_crash.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_no_sysrq_crash.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_no_sysrq_crash.py" "$WORK/services")"
 # The guest never touches the phone's weaver slots, where One UI's lock
 # protectors live (patches/guest_no_weaver.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_no_weaver.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_no_weaver.py" "$WORK/services")"
 # Nor removes templates from the phone's fingerprint and face sensors, where
 # One UI's enrolments live (patches/guest_no_biometric_cleanup.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_no_biometric_cleanup.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_no_biometric_cleanup.py" "$WORK/services")"
 # The phone's gatekeeper (screen lock), FRP partition and apexd stay One UI's;
 # guest apps get app ids from 15000 (no keystore namespace shared with One UI's
 # apps) and the guest makes no users or profiles (their per-user keys share
@@ -279,57 +296,57 @@ KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_no_biometric_clea
 # manager keeps One UI's app id (guest_ksu_manager_appid.py, 0.4.39).
 # 0.4.63: the PDB start task survives a failed FRP deactivation (guest_pdb_init_survives.py).
 for g in guest_no_gatekeeper guest_pdb_readonly guest_pdb_init_survives guest_no_apex_installs guest_app_id_offset guest_ksu_manager_appid guest_no_new_users; do
-    NEW=$(python3 -I "$ROOT/switcher/patches/$g.py" "$WORK/services")
+    NEW=$(runpatch "$ROOT/switcher/patches/$g.py" "$WORK/services")
     KEY_DIRS="$KEY_DIRS $NEW"
 done
 # The guest's own idmap2d instead of One UI's (patches/guest_own_idmap.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_own_idmap.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_own_idmap.py" "$WORK/services")"
 # A WebView zygote that cannot start is logged, not fatal (S24 Ultra, Find X9
 # Ultra IN, session 77e7789e: system_server died 60 s into boot;
 # patches/guest_webview_zygote_safe.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_webview_zygote_safe.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_webview_zygote_safe.py" "$WORK/services")"
 # A native-only service fails to start instead of waiting on One UI's
 # zygote_next (S25 Ultra, Pixel 9 Pro XL, app 0.4.25: Chrome's renderer held
 # every process start of the session; patches/guest_no_native_services.py).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_no_native_services.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_no_native_services.py" "$WORK/services")"
 # Samsung's VoLTE app (com.sec.imsservice) keeps android.uid.system in the guest,
 # but only from the staged read-only path /system_ext/priv-app/OneOSSecIms
 # (guest_prepare.sh, ONEOS_GUEST_SEC_IMS=1): verifySignatures admits that one
 # package there despite its Samsung platform signature, and nothing else
 # (patches/guest_sec_ims_signature.py, docs/samsung-ims-in-guest.md). Always
 # applied; dormant unless such a package is staged at that path.
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_sec_ims_signature.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_sec_ims_signature.py" "$WORK/services")"
 # The wipe paths never delete the phone's secrets: Secretkeeper, the secure
 # element, vold's storage and metadata keys (Infinity-X's duress wipe calls
 # them directly; patches/guest_no_wipe_secrets.py). Before guest_own_vold.py.
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_no_wipe_secrets.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_no_wipe_secrets.py" "$WORK/services")"
 # The guest's StorageManagerService keeps no handle on the phone's own A/B
 # updater (patches/guest_no_update_engine.py). oneos_switch.sh stops
 # update_engine for the session, and a build whose StorageManagerService
 # constructs an UpdateEngine then dies at boot (Nothing OS 5.0, first run);
 # a build that has none is left alone (Pixel).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_no_update_engine.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_no_update_engine.py" "$WORK/services")"
 # vivo OriginOS: the face HAL's extension only when it is vivo's, and AOSP's
 # AlarmManagerService instead of MediaTek's RTC power-off alarms
 # (patches/vivo_guards.py; vivo-services.jar below).
 if in_image /system/framework/vivo-services.jar; then
-    KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/vivo_guards.py" services "$WORK/services")"
+    KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/vivo_guards.py" services "$WORK/services")"
 fi
 # The guest's own vold as "gvld", with vold_patched above; no guest call left
 # that reaches One UI's "vold" (patches/guest_own_vold.py).
 if [ "$VOLD_GVLD" = 1 ]; then
-    KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_own_vold.py" "$WORK/services")"
+    KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_own_vold.py" "$WORK/services")"
 fi
 # StorageManagerService waits for OPPO's DefragService, which never registers.
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/oplus_wait_for_service.py" "$WORK/services" --only DefragService)"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/oplus_wait_for_service.py" "$WORK/services" --only DefragService)"
 # ColorOS's sound trigger retried a HAL the phone does not have forever on system_server's
 # main thread (A16 5G, A17 5G: Watchdog kill after 60 s); it gives up as AOSP does
 # (patches/oplus_soundtrigger_no_hal.py; nothing to change on other images).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/oplus_soundtrigger_no_hal.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/oplus_soundtrigger_no_hal.py" "$WORK/services")"
 # A sound-trigger HAL that refuses a model (Pixel's Now Playing on Samsung's HAL) is not
 # rebooted: the reboot took One UI's audio HAL process and the guest's audio down, again
 # and again (patches/guest_soundtrigger_no_reboot.py, 0.4.64).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_soundtrigger_no_reboot.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_soundtrigger_no_reboot.py" "$WORK/services")"
 # Pixel's Comfort View as a color matrix, like Night Light (run 43: the switch
 # did nothing; patches/comfort_view_bridge.py). Left out, with a warning, on an
 # image without ColorDisplayService.setUp, and not run for ColorOS: its
@@ -338,17 +355,17 @@ KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_soundtrigger_no_r
 if in_image /system/framework/oplus-services.jar; then
     echo "Comfort View bridge: ColorOS image, left out"
 else
-    KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/comfort_view_bridge.py" "$WORK/services" "$ROOT/switcher/patches/OneOSComfortView.smali")"
+    KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/comfort_view_bridge.py" "$WORK/services" "$ROOT/switcher/patches/OneOSComfortView.smali")"
     # Window blur stays on when the phone is warm (owner, run 45): only the
     # thermal term leaves updateBlurEnabled(); Developer options and battery
     # saver still turn it off (patches/guest_blur_no_thermal.py).
-    KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/guest_blur_no_thermal.py" "$WORK/services")"
+    KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/guest_blur_no_thermal.py" "$WORK/services")"
     echo "Window blur: not turned off by heat (BlurController.updateBlurEnabled)"
 fi
 # Qualcomm's display additions make a second built-in panel private, and the
 # Z Fold's cover becomes display 0 when it folds: no app could use it
 # (patches/qti_builtin_display_public.py; nothing in images without them).
-KEY_DIRS="$KEY_DIRS $(python3 -I "$ROOT/switcher/patches/qti_builtin_display_public.py" "$WORK/services")"
+KEY_DIRS="$KEY_DIRS $(runpatch "$ROOT/switcher/patches/qti_builtin_display_public.py" "$WORK/services")"
 # A dex the added OneOS classes push past 65536 method references (the Pixel 9
 # Pro XL's classes2: 65568) gets them moved to a dex of their own after the
 # last one: one jar, one class loader, so they keep their package access.
@@ -385,45 +402,45 @@ done
 if in_image /system/framework/oplus-services.jar; then
     "$DEBUGFS" -R "dump /system/framework/oplus-services.jar $WORK/oplus-services.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/oplus" "$WORK/oplus-services.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/oplus_wait_for_service.py" "$WORK/oplus")
+    DIRS=$(runpatch "$ROOT/switcher/patches/oplus_wait_for_service.py" "$WORK/oplus")
     # QSPM wait in GameGpuControlPanel, ctl.start dumpenvironment and gettpinfo (patches/oplus_boot_hangs.py).
     # (Each patcher in a plain assignment, so set -e stops the build when it fails.)
-    NEW=$(python3 -I "$ROOT/switcher/patches/oplus_boot_hangs.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/oplus_boot_hangs.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # Same storage guards as services.jar (patches/guest_storage_guards.py).
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_no_sysrq_crash.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_no_sysrq_crash.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_no_wipe_secrets.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_no_wipe_secrets.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # With the guest vold as "gvld": OPPO's own "vold" lookup too
     # (OplusStorageManagerFeature, patches/guest_own_vold.py --oplus).
     if [ "$VOLD_GVLD" = 1 ]; then
-        NEW=$(python3 -I "$ROOT/switcher/patches/guest_own_vold.py" --oplus "$WORK/oplus")
+        NEW=$(runpatch "$ROOT/switcher/patches/guest_own_vold.py" --oplus "$WORK/oplus")
         DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     fi
     # OPPO's own IInstalld.Stub.asInterface() calls go through services.jar's
     # OneOSInstalldProxy too (patches/guest_installd_abi.py --callers).
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_installd_abi.py" --callers "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_installd_abi.py" --callers "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # Brightness on Samsung's panel (patches/samsung_backlight_curve.py).
-    NEW=$(python3 -I "$ROOT/switcher/patches/samsung_backlight_curve.py" "$WORK/oplus" "$ROOT/switcher/patches/OneOSPanelBacklight.smali")
+    NEW=$(runpatch "$ROOT/switcher/patches/samsung_backlight_curve.py" "$WORK/oplus" "$ROOT/switcher/patches/OneOSPanelBacklight.smali")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
 
     # OPPO's default runtime grants without CUST_LEVEL_LIST (patches/oplus_default_grants.py).
-    NEW=$(python3 -I "$ROOT/switcher/patches/oplus_default_grants.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/oplus_default_grants.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # No charge error warnings from the missing OPPO charger HAL's -1 (patches/oplus_battery_notify.py).
-    NEW=$(python3 -I "$ROOT/switcher/patches/oplus_battery_notify.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/oplus_battery_notify.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # No FHD+/QHD+ resolution switch without ColorOS's density tables: it made every density 640
     # (patches/oplus_resolution_tables.py).
-    NEW=$(python3 -I "$ROOT/switcher/patches/oplus_resolution_tables.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/oplus_resolution_tables.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # No system_server crash when Do Not Disturb turns on without a notification
     # light (Samsung has none; patches/oplus_zen_light.py).
-    NEW=$(python3 -I "$ROOT/switcher/patches/oplus_zen_light.py" "$WORK/oplus")
+    NEW=$(runpatch "$ROOT/switcher/patches/oplus_zen_light.py" "$WORK/oplus")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     java -jar "$APKTOOL" b -q -o "$WORK/oplus-rebuilt.jar" "$WORK/oplus"
     cp "$WORK/oplus-services.jar" "$OUT/oplus-services_patched.jar"
@@ -457,18 +474,18 @@ rm -f "$OUT/vivo-services_patched.jar"
 if in_image /system/framework/vivo-services.jar; then
     "$DEBUGFS" -R "dump /system/framework/vivo-services.jar $WORK/vivo-services.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/vivo" "$WORK/vivo-services.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/vivo_guards.py" vivo-services "$WORK/vivo")
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/vivo")
+    DIRS=$(runpatch "$ROOT/switcher/patches/vivo_guards.py" vivo-services "$WORK/vivo")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/vivo")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_installd_abi.py" --callers "$WORK/vivo")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_installd_abi.py" --callers "$WORK/vivo")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # vivo's app freezer asks for transport 11, which One UI's connectivity module
     # refuses (second CN run: system_server died); see vivo-service-wifi.jar below.
-    NEW=$(python3 -I "$ROOT/switcher/patches/vivo_wifi_connectivity.py" "$WORK/vivo" services)
+    NEW=$(runpatch "$ROOT/switcher/patches/vivo_wifi_connectivity.py" "$WORK/vivo" services)
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     # vivo's vendor HALs without a wait that never ends (vcode: tenth CN run, 542
     # one-second waits in system_server, a lock held meanwhile).
-    NEW=$(python3 -I "$ROOT/switcher/patches/vivo_no_wait.py" "$WORK/vivo")
+    NEW=$(runpatch "$ROOT/switcher/patches/vivo_no_wait.py" "$WORK/vivo")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     java -jar "$APKTOOL" b -q -o "$WORK/vivo-rebuilt.jar" "$WORK/vivo"
     cp "$WORK/vivo-services.jar" "$OUT/vivo-services_patched.jar"
@@ -490,7 +507,7 @@ VTX_JAR=/system/framework/vivo-telephony-common-platform-ex.jar
 if in_image $VTX_JAR; then
     "$DEBUGFS" -R "dump $VTX_JAR $WORK/vtx.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/vtx" "$WORK/vtx.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/vivo_telephony.py" "$WORK/vtx")
+    DIRS=$(runpatch "$ROOT/switcher/patches/vivo_telephony.py" "$WORK/vtx")
     java -jar "$APKTOOL" b -q -o "$WORK/vtx-rebuilt.jar" "$WORK/vtx"
     cp "$WORK/vtx.jar" "$OUT/vivo-telephony-common-platform-ex_patched.jar"
     for d in $DIRS; do
@@ -511,7 +528,7 @@ FA_JAR=/system/framework/framework-adapter.jar
 if in_image /system/framework/vivo-services.jar && in_image $FA_JAR; then
     "$DEBUGFS" -R "dump $FA_JAR $WORK/fa.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/fa" "$WORK/fa.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/vivo_guards.py" framework-adapter "$WORK/fa")
+    DIRS=$(runpatch "$ROOT/switcher/patches/vivo_guards.py" framework-adapter "$WORK/fa")
     java -jar "$APKTOOL" b -q -o "$WORK/fa-rebuilt.jar" "$WORK/fa"
     cp "$WORK/fa.jar" "$OUT/framework-adapter_patched.jar"
     for d in $DIRS; do
@@ -529,17 +546,17 @@ PRO_JAR=/system/system_ext/framework/apprecovery.proinstaller.jar
 if in_image $MIUI_JAR; then
     "$DEBUGFS" -R "dump $MIUI_JAR $WORK/miui-services.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/miui" "$WORK/miui-services.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/miui_guards.py" "$WORK/miui")
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/miui")
+    DIRS=$(runpatch "$ROOT/switcher/patches/miui_guards.py" "$WORK/miui")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_storage_guards.py" "$WORK/miui")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_installd_abi.py" --callers "$WORK/miui")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_installd_abi.py" --callers "$WORK/miui")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     if [ "$VOLD_GVLD" = 1 ]; then
-        NEW=$(python3 -I "$ROOT/switcher/patches/guest_own_vold.py" --miui "$WORK/miui")
+        NEW=$(runpatch "$ROOT/switcher/patches/guest_own_vold.py" --miui "$WORK/miui")
         DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     fi
     # HAL extension casts (patches/hyperos_hal_ext.py): the vibrator's.
-    NEW=$(python3 -I "$ROOT/switcher/patches/hyperos_hal_ext.py" --expect 1 "$WORK/miui" HalExtServices)
+    NEW=$(runpatch "$ROOT/switcher/patches/hyperos_hal_ext.py" --expect 1 "$WORK/miui" HalExtServices)
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     java -jar "$APKTOOL" b -q -o "$WORK/miui-rebuilt.jar" "$WORK/miui"
     cp "$WORK/miui-services.jar" "$OUT/miui-services_patched.jar"
@@ -553,7 +570,7 @@ if in_image $MIUI_JAR; then
     in_image $PRO_JAR || { echo "ERROR: $MIUI_JAR without $PRO_JAR: another HyperOS layout, not guarded" >&2; exit 1; }
     "$DEBUGFS" -R "dump $PRO_JAR $WORK/proinstaller.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/pro" "$WORK/proinstaller.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/miui_guards.py" --proinstaller "$WORK/pro")
+    DIRS=$(runpatch "$ROOT/switcher/patches/miui_guards.py" --proinstaller "$WORK/pro")
     java -jar "$APKTOOL" b -q -o "$WORK/pro-rebuilt.jar" "$WORK/pro"
     cp "$WORK/proinstaller.jar" "$OUT/apprecovery.proinstaller_patched.jar"
     for d in $DIRS; do
@@ -572,7 +589,7 @@ if in_image $MIUI_JAR; then
     in_image $WIFI_JAR || { echo "ERROR: $MIUI_JAR without $WIFI_JAR" >&2; exit 1; }
     "$DEBUGFS" -R "dump $WIFI_JAR $WORK/miui-wifi-service.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/mwifi" "$WORK/miui-wifi-service.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/hyperos_hal_ext.py" --expect 5 "$WORK/mwifi" HalExtWifi)
+    DIRS=$(runpatch "$ROOT/switcher/patches/hyperos_hal_ext.py" --expect 5 "$WORK/mwifi" HalExtWifi)
     java -jar "$APKTOOL" b -q -o "$WORK/mwifi-rebuilt.jar" "$WORK/mwifi"
     cp "$WORK/miui-wifi-service.jar" "$OUT/miui-wifi-service_patched.jar"
     for d in $DIRS; do
@@ -590,7 +607,7 @@ if in_image $MIUI_JAR; then
     in_image $TEL_JAR || { echo "ERROR: $MIUI_JAR without $TEL_JAR" >&2; exit 1; }
     "$DEBUGFS" -R "dump $TEL_JAR $WORK/miui-telephony-common.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/mtel" "$WORK/miui-telephony-common.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/hyperos_telephony.py" "$WORK/mtel")
+    DIRS=$(runpatch "$ROOT/switcher/patches/hyperos_telephony.py" "$WORK/mtel")
     java -jar "$APKTOOL" b -q -o "$WORK/mtel-rebuilt.jar" "$WORK/mtel"
     cp "$WORK/miui-telephony-common.jar" "$OUT/miui-telephony-common_patched.jar"
     for d in $DIRS; do
@@ -607,7 +624,7 @@ if in_image $MIUI_JAR; then
     if in_image $XOT_JAR; then
         "$DEBUGFS" -R "dump $XOT_JAR $WORK/xiaomi-opt-telephony.jar" "$IMG" 2>/dev/null
         java -jar "$APKTOOL" d -q -f -r -o "$WORK/xot" "$WORK/xiaomi-opt-telephony.jar"
-        DIRS=$(python3 -I "$ROOT/switcher/patches/hyperos_hidl_radio.py" "$WORK/xot")
+        DIRS=$(runpatch "$ROOT/switcher/patches/hyperos_hidl_radio.py" "$WORK/xot")
         java -jar "$APKTOOL" b -q -o "$WORK/xot-rebuilt.jar" "$WORK/xot"
         cp "$WORK/xiaomi-opt-telephony.jar" "$OUT/xiaomi-opt-telephony_patched.jar"
         for d in $DIRS; do
@@ -627,7 +644,7 @@ if in_image $MIUI_JAR; then
     AH_LIB=/system/lib64/libaudiohal@aidl.so
     in_image $AH_LIB || { echo "ERROR: $MIUI_JAR without $AH_LIB" >&2; exit 1; }
     "$DEBUGFS" -R "dump $AH_LIB $WORK/libaudiohal_aidl.so" "$IMG" 2>/dev/null
-    python3 -I "$ROOT/switcher/patches/hyperos_audio_ext.py" "$WORK/libaudiohal_aidl.so" "$OUT/libaudiohal_aidl_patched.so"
+    runpatch "$ROOT/switcher/patches/hyperos_audio_ext.py" "$WORK/libaudiohal_aidl.so" "$OUT/libaudiohal_aidl_patched.so"
     rm -f "$WORK/libaudiohal_aidl.so"
     # socket_exec (switcher/native): guest_start.sh starts hyos_spawner with
     # it, the service that runs HyperOS's rust packages (the launcher).
@@ -641,7 +658,7 @@ if in_image $MIUI_JAR; then
     HYPEROS_FW=1
     "$DEBUGFS" -R "dump $FW_JAR $WORK/framework.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/fw" "$WORK/framework.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/hyperos_framework.py" "$WORK/fw")
+    DIRS=$(runpatch "$ROOT/switcher/patches/hyperos_framework.py" "$WORK/fw")
     java -jar "$APKTOOL" b -q -o "$WORK/fw-rebuilt.jar" "$WORK/fw"
     cp "$WORK/framework.jar" "$OUT/framework_patched.jar"
     for d in $DIRS; do
@@ -666,7 +683,7 @@ fi
 if in_image /system/product/framework/ims-ext-common.jar; then
     "$DEBUGFS" -R "dump /system/product/framework/ims-ext-common.jar $WORK/ims-ext-common.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/imsext" "$WORK/ims-ext-common.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/qti_ims_ext_backoff.py" "$WORK/imsext")
+    DIRS=$(runpatch "$ROOT/switcher/patches/qti_ims_ext_backoff.py" "$WORK/imsext")
     java -jar "$APKTOOL" b -q -o "$WORK/imsext-rebuilt.jar" "$WORK/imsext"
     cp "$WORK/ims-ext-common.jar" "$OUT/ims-ext-common_patched.jar"
     for d in $DIRS; do
@@ -781,7 +798,7 @@ fi
 if in_image /system/system_ext/framework/oplus-telephony-common.jar; then
     "$DEBUGFS" -R "dump /system/system_ext/framework/oplus-telephony-common.jar $WORK/oplus-telephony-common.jar" "$IMG" 2>/dev/null
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/otc" "$WORK/oplus-telephony-common.jar"
-    NEW=$(python3 -I "$ROOT/switcher/patches/guest_signal_poll.py" "$WORK/otc" "$ROOT/switcher/patches/OneOSSignalPoll.smali")
+    NEW=$(runpatch "$ROOT/switcher/patches/guest_signal_poll.py" "$WORK/otc" "$ROOT/switcher/patches/OneOSSignalPoll.smali")
     java -jar "$APKTOOL" b -q -o "$WORK/otc-rebuilt.jar" "$WORK/otc"
     cp "$WORK/oplus-telephony-common.jar" "$OUT/oplus-telephony-common_patched.jar"
     for d in $NEW; do
@@ -880,7 +897,7 @@ else
             # like every other reason here: not a failed build.
             if ! java -jar "$APKTOOL" d -q -f -r -o "$WORK/tc" "$WORK/telephony-common.jar"; then
                 INJ_WHY="apktool could not decode telephony-common.jar"
-            elif INJ_CHECK=$(python3 -I "$ROOT/switcher/patches/aosp_signal_poll_check.py" "$WORK/tc" 2>&1); then
+            elif INJ_CHECK=$(runpatch "$ROOT/switcher/patches/aosp_signal_poll_check.py" "$WORK/tc" 2>&1); then
                 echo "$INJ_CHECK"
             else
                 INJ_WHY="patches/aosp_signal_poll_check.py: $INJ_CHECK"
@@ -1224,7 +1241,7 @@ patch_apk_dex() {
     fi
     rm -rf "$WORK/pad"
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/pad" "$1"
-    if PAD_DIRS=$(python3 -I "$ROOT/switcher/patches/$3" "$WORK/pad") && [ -n "$PAD_DIRS" ]; then
+    if PAD_DIRS=$(runpatch "$ROOT/switcher/patches/$3" "$WORK/pad") && [ -n "$PAD_DIRS" ]; then
         # Rebuild the dex files the patcher changed only (one per line it printed);
         # the others are left out of the build, and each goes back in turn.
         for d in "$WORK"/pad/smali*; do
@@ -1770,7 +1787,7 @@ for VW in vivo-service-wifi:wifi vivo-service-wifi-ex-impl:impl; do
     unzip -p "$WORK/$VWN.jar" 'classes*.dex' | grep -aq "addTransportType" || { echo "$VWN.jar: no transport requests, not patched"; continue; }
     rm -rf "$WORK/vw" "$WORK/vw-rebuilt.jar"
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/vw" "$WORK/$VWN.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/vivo_wifi_connectivity.py" "$WORK/vw" "$VWM")
+    DIRS=$(runpatch "$ROOT/switcher/patches/vivo_wifi_connectivity.py" "$WORK/vw" "$VWM")
     java -jar "$APKTOOL" b -q -o "$WORK/vw-rebuilt.jar" "$WORK/vw"
     cp "$WORK/$VWN.jar" "$WORK/${VWN}_patched.jar"
     for d in $DIRS; do
@@ -1797,7 +1814,7 @@ rm -f "$WORK/framework-wifi.jar"
 if [ -s "$WORK/framework-wifi.jar" ] && unzip -p "$WORK/framework-wifi.jar" 'classes*.dex' | grep -aq "Landroid/net/wifi/VivoTrafficStats;"; then
     rm -rf "$WORK/fw" "$WORK/fw-rebuilt.jar"
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/fw" "$WORK/framework-wifi.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/vivo_traffic_stats.py" "$WORK/fw")
+    DIRS=$(runpatch "$ROOT/switcher/patches/vivo_traffic_stats.py" "$WORK/fw")
     java -jar "$APKTOOL" b -q -o "$WORK/fw-rebuilt.jar" "$WORK/fw"
     cp "$WORK/framework-wifi.jar" "$WORK/framework-wifi_patched.jar"
     for d in $DIRS; do
@@ -1882,9 +1899,9 @@ if in_image /system/framework/vivo-framework.jar &&
     "$DEBUGFS" -R "dump /system/framework/vivo-framework.jar $WORK/vivo-framework.jar" "$IMG" 2>/dev/null
     rm -rf "$WORK/vf" "$WORK/vf-rebuilt.jar"
     java -jar "$APKTOOL" d -q -f -r -o "$WORK/vf" "$WORK/vivo-framework.jar"
-    DIRS=$(python3 -I "$ROOT/switcher/patches/vivo_brightness.py" "$WORK/vf")
+    DIRS=$(runpatch "$ROOT/switcher/patches/vivo_brightness.py" "$WORK/vf")
     # vivo's secure TEE (sectee) and other vivo vendor HALs: no endless wait (vivo_no_wait.py).
-    NEW=$(python3 -I "$ROOT/switcher/patches/vivo_no_wait.py" "$WORK/vf")
+    NEW=$(runpatch "$ROOT/switcher/patches/vivo_no_wait.py" "$WORK/vf")
     DIRS=$(printf '%s\n' $DIRS $NEW | sort -u)
     java -jar "$APKTOOL" b -q -o "$WORK/vf-rebuilt.jar" "$WORK/vf"
     cp "$WORK/vivo-framework.jar" "$WORK/vivo-framework_patched.jar"

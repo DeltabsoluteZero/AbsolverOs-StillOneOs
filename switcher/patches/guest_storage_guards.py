@@ -103,9 +103,6 @@ def guard_calls(lines, rel, counts):
 
 def guard_preparer(lines):
     idx = [i for i, l in enumerate(lines) if DESTROY_LI.match(l)]
-    if len(idx) == 0:
-        print("soft-skip guest_storage_guards.py: 0 hits, nothing to patch")
-        return
     if len(idx) != 1:
         sys.exit("UserDataPreparer.destroyUserDataLI not found exactly once")
     j = idx[0] + 1
@@ -128,9 +125,6 @@ def guard_preparer(lines):
 
 def guard_ce_unlocked(lines):
     idx = [i for i, l in enumerate(lines) if l == CE_UNLOCKED]
-    if len(idx) == 0:
-        print("soft-skip guest_storage_guards.py: 0 hits, nothing to patch")
-        return
     if len(idx) != 1:
         sys.exit("StorageManagerService.isCeStorageUnlocked not found exactly once")
     j = idx[0] + 1
@@ -143,9 +137,6 @@ def guard_ce_unlocked(lines):
 
 def guard_no_quota(lines):
     idx = [i for i, l in enumerate(lines) if l == QUOTA]
-    if len(idx) == 0:
-        print("soft-skip guest_storage_guards.py: 0 hits, nothing to patch")
-        return
     if len(idx) != 1:
         sys.exit("StorageStatsService.isQuotaSupported not found exactly once")
     j = idx[0] + 1

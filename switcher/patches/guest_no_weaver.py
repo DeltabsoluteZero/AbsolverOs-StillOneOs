@@ -44,9 +44,6 @@ def span_of(lines, k):
 
 def android16_lookup(path, lines):
     heads = [k for k, l in enumerate(lines) if HEADER16.match(l)]
-    if len(heads) == 0:
-        print("soft-skip guest_no_weaver.py: 0 hits, nothing to patch")
-        return
     if len(heads) != 1:
         sys.exit(f"{path}: neither getWeaverServiceLocked() nor one getWeaverService() ({len(heads)})")
     own = span_of(lines, heads[0])
@@ -72,9 +69,6 @@ def main(root):
         heads = [k for k, l in enumerate(lines) if HEADER.match(l)]
         if not heads:
             heads = android16_lookup(path, lines)
-        if len(heads) == 0:
-            print("soft-skip guest_no_weaver.py: 0 hits, nothing to patch")
-            return
         if len(heads) != 1:
             sys.exit(f"{path}: getWeaverServiceLocked() found {len(heads)} times, expected once")
         i = heads[0]

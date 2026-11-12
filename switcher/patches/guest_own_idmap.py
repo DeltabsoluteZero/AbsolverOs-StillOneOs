@@ -23,9 +23,6 @@ CALL = re.compile(r"^\s*invoke-static \{[vp]\d+\}, Landroid/os/SystemService;->(
 def main(root):
     hits = [os.path.join(d, f) for d, _, fs in os.walk(root) for f in fs
             if os.path.join(d, f).endswith(os.sep + SUFFIX)]
-    if len(hits) == 0:
-        print("soft-skip guest_own_idmap.py: 0 hits, nothing to patch")
-        return
     if len(hits) != 1:
         sys.exit(f"expected one IdmapDaemon.smali, found {len(hits)}")
     path = hits[0]
