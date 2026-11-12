@@ -165,8 +165,7 @@ jobs:
         run: |
           mkdir -p ~/.android
           mkdir -p ~/.config/.android
-          chmod -R 755 ~/.android ~/.config/.android
-          echo "ANDROID_SDK_HOME=$HOME/.android" >> $GITHUB_ENV
+          chmod 755 ~/.android ~/.config/.android
         
       - name: Build APK with the set packed in
         run: |
