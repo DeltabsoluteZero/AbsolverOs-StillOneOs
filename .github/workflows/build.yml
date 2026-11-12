@@ -42,8 +42,18 @@ jobs:
 
       - name: Seed pudding archive (cache miss only)
         if: steps.pudcache.outputs.cache-hit != 'true'
+        env:
+          PD_KEY: ${{ secrets.PD_API_KEY }}
         run: |
-          curl -L --retry 8 --retry-all-errors --retry-delay 5 --continue-at - -o pudding.bin.part "https://sourceforge.net/projects/mystic-gsi-updates/files/HyperOS/Hyperos-pudding-16-OS3.0.50.2.W-AB-20260122-MysticGSI.zip/download"
+          URL_SF="https://sourceforge.net/projects/mystic-gsi-updates/files/HyperOS/Hyperos-pudding-16-OS3.0.50.2.W-AB-20260122-MysticGSI.zip/download"
+          URL_PD="https://pixeldrain.com/api/file/XkWxFdSw?download"
+          if [ -n "$PD_KEY" ]; then
+            echo "seeding via PixelDrain (authed, fast)"
+            curl -L --retry 8 --retry-all-errors --retry-delay 5 --continue-at - -H "Authorization: Bearer $PD_KEY" -o pudding.bin.part "$URL_PD"
+          else
+            echo "PD_API_KEY not set; seeding via SourceForge (slower, still one-time)"
+            curl -L --retry 8 --retry-all-errors --retry-delay 5 --continue-at - -o pudding.bin.part "$URL_SF"
+          fi
           test -s pudding.bin.part && mv pudding.bin.part pudding.bin || { rm -f pudding.bin.part; echo "seed incomplete"; exit 1; }
 
       - name: Extract + report pudding image
