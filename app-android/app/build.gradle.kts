@@ -476,7 +476,7 @@ android {
         // Pixel 9 Pro XL r5, Infinity-X r4, Nothing OS r22 (samcam_bar.tar for phones). The panel kept at its top rate in
         // Pixel, HyperOS and Nothing OS (it stayed at 24 Hz: 10-15 fps). Infinity-X: Samsung IMS (the carve-out's
         // /system/system_ext path; framework members; SMS centre). The Galaxy A16 4G (SM-A165F).
-        versionCode = 120
+        versionCode = 126
         versionName = "0.4.98"
         // 0.4.56 (73), TEST CHANNEL ONLY: the Find N6 set's Theme Store logs every OkHttp request and reply (n6g_r7,
         // patches/theme_store_netlog.py) for the owner's "No Data" log; the next public build goes back to n6g_r6.
@@ -657,7 +657,7 @@ abstract class ProbeApkCheckTask : DefaultTask() {
     companion object {
         val FULL_SCREENS = listOf("ImageActivity", "PrepareActivity", "SwitchActivity", "LastSessionActivity", "GapSplashActivity")
 
-        /** "Allow OneOS", "for OneOS", "visible to OneOS", not followed by " Probe" (EditionsTest has the same). */
+        /** "Allow AbsolverOS", "for AbsolverOS", "visible to AbsolverOS", not followed by " Probe" (EditionsTest has the same). */
         val OTHER_APP_ROOT = Regex("""(?:[Aa]llow(?:ed for)?|for|visible to) OneOS\b(?! Probe)""")
     }
 }
@@ -665,7 +665,7 @@ abstract class ProbeApkCheckTask : DefaultTask() {
 androidComponents {
     onVariants { variant ->
         when (variant.flavorName) {
-            // Only OneOS carries the package sets and the session scripts.
+            // Only AbsolverOS carries the package sets and the session scripts.
             "full" -> {
                 variant.sources.assets?.addGeneratedSourceDirectory(oneosFiles, OneOsFilesTask::outputDir)
                 val name = variant.name.replaceFirstChar { it.uppercase() }
