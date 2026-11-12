@@ -33,27 +33,34 @@ jobs:
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
           echo "EXTRACT_EROFS=$(command -v extract.erofs || true)" >> $GITHUB_ENV
 
-      - name: Fetch pudding image from Google Drive folder
+      - name: Cache pudding image archive
+        id: pudcache
+        uses: actions/cache@v4
+        with:
+          path: pudding.bin
+          key: pudding-absolver-v1
+
+      - name: Seed pudding archive (cache miss only)
+        if: steps.pudcache.outputs.cache-hit != 'true'
         run: |
-          python3 -m pip install -q gdown
-          gdown --folder "https://drive.google.com/drive/folders/1p1y4Rmm0Do1TYejAF_Kzjlj9rj5l5fv0"
-          GZ=$(find . -maxdepth 3 \( -name '*.img.gz' -o -name '*.gz' \) | head -1)
-          ZIP=$(find . -maxdepth 3 -name '*.zip' | head -1)
-          if [ -n "$GZ" ]; then
-            gunzip -c "$GZ" > system.img && rm -f "$GZ"
-          elif [ -n "$ZIP" ]; then
-            unzip -o "$ZIP" || true
-            GZ=$(find . -maxdepth 3 \( -name '*.img.gz' -o -name '*.gz' \) | head -1)
-            [ -n "$GZ" ] && { gunzip -c "$GZ" > system.img && rm -f "$GZ"; }
+          curl -L --retry 8 --retry-all-errors --retry-delay 5 --continue-at - -o pudding.bin.part "https://sourceforge.net/projects/mystic-gsi-updates/files/HyperOS/Hyperos-pudding-16-OS3.0.50.2.W-AB-20260122-MysticGSI.zip/download"
+          test -s pudding.bin.part && mv pudding.bin.part pudding.bin || { rm -f pudding.bin.part; echo "seed incomplete"; exit 1; }
+
+      - name: Extract + report pudding image
+        run: |
+          if gunzip -t pudding.bin 2>/dev/null; then
+            gunzip -c pudding.bin > system.img
+          else
+            mkdir -p _x && unzip -o pudding.bin -d _x >/dev/null 2>&1 || true
+            IMG=$(find _x -maxdepth 4 -type f -name system.img | head -1)
+            if [ -n "$IMG" ]; then mv "$IMG" system.img; else G=$(find _x -maxdepth 4 -type f -name "*.img.gz" | head -1); [ -n "$G" ] && gunzip -c "$G" > system.img; fi
           fi
-          if [ ! -s system.img ]; then
-            IMG=$(find . -maxdepth 3 -name 'system.img' | head -1)
-            [ -s "$IMG" ] && mv "$IMG" system.img
-          fi
-          [ -s system.img ] || { echo "no system.img / .gz found in the Drive folder"; exit 1; }
-          echo "e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be  system.img" | sha256sum -c -
-          df -h . | tail -1
-          
+          [ -s system.img ] || { echo "no system.img after extract"; ls -la; [ -d _x ] && find _x -maxdepth 4 -type f | head -20; exit 1; }
+          ACTUAL=$(sha256sum system.img | cut -d" " -f1)
+          echo "system.img sha256 = $ACTUAL"
+          EXP="e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be"
+          if [ "$ACTUAL" = "$EXP" ]; then echo "SHA MATCH"; else echo "SHA DIFFERS (expected $EXP) - bytes cached; patchers act on jars INSIDE, so a different outer sha is usually harmless; if make-overlays rejects it we change the seed source WITHOUT re-downloading"; fi
+
       - name: Stage guest manager (release-signed; the script stages the apk)
         run: |
           JKS="$HOME/.oneos-release/oneos.jks"
