@@ -10,7 +10,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { java-version: '21', distribution: 'temurin' }
-
+        
+      - name: Setup Android directories
+        run: |
+          mkdir -p ~/.android
+          mkdir -p ~/.config/.android
+          chmod -R 755 ~/.android ~/.config/.android
+          
       - name: Android SDK manually at /opt/android-sdk + tools
         run: |
           sudo mkdir -p /opt/android-sdk/cmdline-tools
@@ -156,7 +162,11 @@ jobs:
           echo "hyper hyper-f8u" > $GITHUB_WORKSPACE/app-android/_pkg_tmp/series.txt
           
       - name: Ensure .android dir exists
-        run: mkdir -p ~/.android && mkdir -p ~/.config/.android
+        run: |
+          mkdir -p ~/.android
+          mkdir -p ~/.config/.android
+          chmod -R 755 ~/.android ~/.config/.android
+          echo "ANDROID_SDK_HOME=$HOME/.android" >> $GITHUB_ENV
         
       - name: Build APK with the set packed in
         run: |
