@@ -103,7 +103,7 @@ jobs:
           mkdir -p /tmp/pkg && cp app-android/packages/* /tmp/pkg/
           ( cd out/overlays_hyperos_r25
             for f in *; do [ "$f" = tethering_payload.img ] && continue
-              printf '%s%s\n' "$(sha256sum "$f" | cut -d' ' -f1)" "$f"; done ) > /tmp/pkg/hyper-f8u.sha256
+              sha256sum "$f"; done ) > /tmp/pkg/hyper-f8u.sha256
           echo "hyper hyper-f8u" > /tmp/pkg/series.txt
 
       - name: Build APK with the set packed in
