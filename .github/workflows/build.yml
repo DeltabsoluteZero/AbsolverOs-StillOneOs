@@ -154,7 +154,10 @@ jobs:
             for f in *; do [ "$f" = tethering_payload.img ] && continue
               sha256sum "$f"; done ) > $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u.sha256
           echo "hyper hyper-f8u" > $GITHUB_WORKSPACE/app-android/_pkg_tmp/series.txt
-
+          
+      - name: Ensure .android dir exists
+        run: mkdir -p ~/.android && mkdir -p ~/.config/.android
+        
       - name: Build APK with the set packed in
         run: |
           cd app-android
