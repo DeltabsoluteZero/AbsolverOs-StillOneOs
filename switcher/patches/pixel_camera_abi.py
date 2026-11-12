@@ -266,6 +266,15 @@ def guest_table(stub_text, proxy_text):
 
 
 def main(root, table_path):
+    # pudding bring-up: host/guest ICameraService.connect() param2 is a
+    # CameraCompatibilityInfo parcelable on One UI but primitives on HyperOS
+    # pudding -> a different wire layout this renumber-only tool cannot bridge.
+    # Running it dies mid-loop and, because it writes per-interface, can leave
+    # PARTIAL smali on disk. Declining up-front writes nothing, exits 0, prints
+    # no dir = a clean no-op under any call form. Camera = dead feature, boot-safe.
+    # Re-author later with a real smali parcel-marshalling bridge if the phone needs it.
+    print("pixel_camera_abi: disabled for pudding bring-up (connect() signature unbridgeable; camera left unpatched)", file=sys.stderr)
+    return
     host = read_table(table_path)
     changed, dirs = [], set()
     for iface, hmethods in host.items():
