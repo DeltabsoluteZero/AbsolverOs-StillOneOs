@@ -230,7 +230,9 @@ build = next((b for b in BUILDS if all(sha(data[n]) == want for n, want in b[1].
 if build is None:
     have = ", ".join("%s %s" % (n, sha(d)[:12] if d else "missing") for n, d in data.items())
     print("vold: not a build this was written against (%s): not patched, the guest vold keeps the name vold" % have)
-    sys.exit(0)
+        for _n in sorted(data):
+        print("UNKNOWN-BUILD sha256", _n, sha(data[_n]))
+sys.exit(0)
 for name, off, (old, new) in build[2]:
     d = data[name]
     if d[off:off + len(old)] != old:
