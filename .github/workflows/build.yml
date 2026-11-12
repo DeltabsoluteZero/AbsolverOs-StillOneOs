@@ -33,6 +33,42 @@ jobs:
           echo "APKTOOL=$HOME/apktool.jar" >> $GITHUB_ENV
           echo "EXTRACT_EROFS=$(command -v extract.erofs || true)" >> $GITHUB_ENV
 
+      - name: Gradle credentials for GitHub Packages (SESL libs)
+        env:
+          GPR_USER: ${{ github.actor }}
+          GPR_KEY: ${{ secrets.PACKAGES_TOKEN }}
+        run: |
+          if [ -z "$GPR_KEY" ]; then
+            echo "::error::PACKAGES_TOKEN secret is EMPTY or not set — create a classic PAT with read:packages and add it as repo secret PACKAGES_TOKEN"
+            exit 1
+          fi
+          echo "token length: ${#GPR_KEY}"
+          # confirm the token is real and has the scope, independent of Gradle
+          curl -s -D - -o /dev/null -H "Authorization: Bearer $GPR_KEY" https://api.github.com/user \
+            | grep -i '^x-oauth-scopes:' || echo "no x-oauth-scopes header (token may be invalid)"
+          echo "GPR_USER=$GPR_USER" >> $GITHUB_ENV
+          echo "GPR_KEY=$GPR_KEY"   >> $GITHUB_ENV
+          mkdir -p ~/.gradle/init.d
+          { echo "gpr.user=$GPR_USER";  echo "gpr.key=$GPR_KEY";
+            echo "gprUser=$GPR_USER";   echo "gprKey=$GPR_KEY";
+            echo "GITHUB_USER=$GPR_USER"; echo "GITHUB_TOKEN=$GPR_KEY"; } >> ~/.gradle/gradle.properties
+          # also expose as -D system props for any build that reads them
+          echo "GRADLE_OPTS=-Dgpr.user=$GPR_USER -Dgpr.key=$GPR_KEY -DgprUser=$GPR_USER -DgprKey=$GPR_KEY" >> $GITHUB_ENV
+          cat > ~/.gradle/init.d/gpr.gradle <<'EOF'
+          def u = System.getenv('GPR_USER'); def k = System.getenv('GPR_KEY')
+          if (u && k) {
+            def fix = { repos -> repos.all { r ->
+              if (r instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository
+                  && r.url.toString().contains('maven.pkg.github.com')) {
+                r.credentials { username = u; password = k }
+              }
+            } }
+            settingsEvaluated { s -> fix(s.pluginManagement.repositories); fix(s.dependencyResolutionManagement.repositories) }
+            allprojects { p -> fix(p.repositories) }
+          }
+          EOF
+          chmod 600 ~/.gradle/gradle.properties ~/.gradle/init.d/gpr.gradle
+      
       - name: Cache pudding image archive
         id: pudcache
         uses: actions/cache@v4
@@ -106,42 +142,6 @@ jobs:
           ls -la app-android/guest/build/outputs/apk/release/ 2>/dev/null | head
           sha256sum "$SRC" app-android/switcher/assets/guest_manager.apk app-android/guest/build/outputs/apk/release/guest-release.apk 2>/dev/null
 
-      - name: Gradle credentials for GitHub Packages (SESL libs)
-        env:
-          GPR_USER: ${{ github.actor }}
-          GPR_KEY: ${{ secrets.PACKAGES_TOKEN }}
-        run: |
-          if [ -z "$GPR_KEY" ]; then
-            echo "::error::PACKAGES_TOKEN secret is EMPTY or not set — create a classic PAT with read:packages and add it as repo secret PACKAGES_TOKEN"
-            exit 1
-          fi
-          echo "token length: ${#GPR_KEY}"
-          # confirm the token is real and has the scope, independent of Gradle
-          curl -s -D - -o /dev/null -H "Authorization: Bearer $GPR_KEY" https://api.github.com/user \
-            | grep -i '^x-oauth-scopes:' || echo "no x-oauth-scopes header (token may be invalid)"
-          echo "GPR_USER=$GPR_USER" >> $GITHUB_ENV
-          echo "GPR_KEY=$GPR_KEY"   >> $GITHUB_ENV
-          mkdir -p ~/.gradle/init.d
-          { echo "gpr.user=$GPR_USER";  echo "gpr.key=$GPR_KEY";
-            echo "gprUser=$GPR_USER";   echo "gprKey=$GPR_KEY";
-            echo "GITHUB_USER=$GPR_USER"; echo "GITHUB_TOKEN=$GPR_KEY"; } >> ~/.gradle/gradle.properties
-          # also expose as -D system props for any build that reads them
-          echo "GRADLE_OPTS=-Dgpr.user=$GPR_USER -Dgpr.key=$GPR_KEY -DgprUser=$GPR_USER -DgprKey=$GPR_KEY" >> $GITHUB_ENV
-          cat > ~/.gradle/init.d/gpr.gradle <<'EOF'
-          def u = System.getenv('GPR_USER'); def k = System.getenv('GPR_KEY')
-          if (u && k) {
-            def fix = { repos -> repos.all { r ->
-              if (r instanceof org.gradle.api.artifacts.repositories.MavenArtifactRepository
-                  && r.url.toString().contains('maven.pkg.github.com')) {
-                r.credentials { username = u; password = k }
-              }
-            } }
-            settingsEvaluated { s -> fix(s.pluginManagement.repositories); fix(s.dependencyResolutionManagement.repositories) }
-            allprojects { p -> fix(p.repositories) }
-          }
-          EOF
-          chmod 600 ~/.gradle/gradle.properties ~/.gradle/init.d/gpr.gradle
-      
       - name: Generate the matching patch set
         run: bash scripts/make-overlays.sh system.img out/overlays_hyperos_r25
 
