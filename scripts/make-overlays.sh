@@ -244,6 +244,7 @@ PYEOF
 # pudding bring-up: content-addressed vold rename when the BUILDS table misses.
 # Renames \0vold\0 -> \0eVld\0 by CONTENT (no offsets), exactly-one-occurrence guard.
 if [ ! -s "$OUT/vold_patched" ] && [ -s "$WORK/vold" ]; then
+(cd "$OUT" && sha256sum vold_patched service.incremental_patched.so) >> "$OUT/guards.txt"
   python3 - "$WORK/vold" "$WORK/service.incremental.so" "$OUT/vold_patched" "$OUT/service.incremental_patched.so" <<'PYV' || echo "generic vold refused (see message above); set will lack vold_patched"
 import sys, os
 sv, si, ov, oi = sys.argv[1:5]
