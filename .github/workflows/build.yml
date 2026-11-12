@@ -23,6 +23,8 @@ jobs:
           command -v debugfs && command -v unzip
           sudo apt-get install -y erofs-utils || echo "erofs-utils unavailable - OK for the HyperOS set"
           curl -Lo ~/apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v2.11.1/apktool_2.11.1.jar
+          mkdir -p mysticgsi/tools/apktool
+          cp ~/apktool.jar mysticgsi/tools/apktool/apktool.jar
           mkdir -p ~/.android
           keytool -genkeypair -keystore ~/.android/debug.keystore -storepass android \
             -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
