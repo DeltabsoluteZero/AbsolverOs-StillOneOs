@@ -54,9 +54,17 @@ jobs:
           echo "e0ff2bcb4198d2c23b35e29b7e02a0d0426626a60e2be65973a3982ea61864be  system.img" | sha256sum -c -
           df -h . | tail -1
           
-      - name: Undo the accidental rename
+      - name: Stage guest manager (release, signed, guard-satisfying)
         run: |
-          [ -f "scripts/build-guest-manager.sh --debug" ] && mv "scripts/build-guest-manager.sh --debug" scripts/build-guest-manager.sh || true
+          mkdir -p ~/.oneos-release
+          keytool -genkeypair -keystore ~/.oneos-release/oneos.jks -storepass oneos123 -alias oneos -keypass oneos123 -dname "CN=AbsolverOS" -keyalg RSA -keysize 2048 -validity 10000
+          { echo "storeFile=$HOME/.oneos-release/oneos.jks"; echo "storePassword=oneos123"; echo "keyAlias=oneos"; echo "keyPassword=oneos123"; } > ~/.oneos-release/keystore.properties
+          bash scripts/build-guest-manager.sh release
+          REL=guest/build/outputs/apk/release/guest-release.apk
+          test -f "$REL" || { echo "release apk missing at $REL"; ls -R guest/build/outputs 2>/dev/null | head -20; exit 1; }
+          cp -f "$REL" switcher/assets/guest_manager.apk
+          echo "guard inputs (must be equal):"; sha256sum "$REL" switcher/assets/guest_manager.apk
+
       - name: Gradle credentials for GitHub Packages (SESL libs)
         env:
           GPR_USER: ${{ github.actor }}
