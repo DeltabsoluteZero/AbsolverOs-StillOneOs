@@ -2130,3 +2130,5 @@ done
 RJ=""
 for j in "$OUT"/*_patched.jar "$OUT"/oneos-telephony.jar; do [ -f "$j" ] && RJ="$RJ $j"; done
 [ -z "$RJ" ] || python3 -I "$ROOT/scripts/check-oneos-refs.py" "$BT/dexdump" $RJ
+
+bash "$(dirname "$0")/vold-fallback.sh" "$WORK" "$OUT" || true
