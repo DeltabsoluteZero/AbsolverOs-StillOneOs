@@ -12,11 +12,12 @@
 # whose image is gone, call it with copies pulled from the phone's stage.
 set -e
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-[ -f "$1" ] && [ -f "$2" ] && [ -d "$3" ] || { echo "usage: $0 <libcamera_client.so> <libcameracompatbilityinfo.so> <out dir>" >&2; exit 2; }
+[ -f "$1" ] && [ -d "$3" ] || { echo "usage: $0 <libcamera_client.so> <libcameracompatbilityinfo.so> <out dir>" >&2; exit 2; }
 OUT=$(cd "$3" && pwd)
 TABLE="$ROOT/switcher/patches/host_camera.txt"
 for pair in "$1:libcamera_client_patched.so" "$2:libcameracompatbilityinfo_patched.so"; do
     src=${pair%%:*}; name=${pair#*:}
+    [ -s "$src" ] || { echo "$name: source not in image, skipped"; continue; }
     rm -f "$OUT/$name"
     sed -i "/ $name\$/d" "$OUT/guards.txt" 2>/dev/null || true
     # A refusal (exit 1) stops the build: inside $(...) set -e would not (0.4.31,

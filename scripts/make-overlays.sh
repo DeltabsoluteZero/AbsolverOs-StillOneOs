@@ -996,9 +996,11 @@ elif in_image /system/framework/framework.jar; then
     "$ROOT/scripts/patch-framework-camera.sh" "$WORK/framework-cam.jar" "$OUT"
     rm -f "$WORK/framework-cam.jar"
 fi
-if [ "${ONEOS_NO_CAMERA_ABI:-0}" != 1 ] && in_image /system/lib64/libcamera_client.so && in_image /system/lib64/libcameracompatbilityinfo.so; then
+if [ "${ONEOS_NO_CAMERA_ABI:-0}" != 1 ] && in_image /system/lib64/libcamera_client.so; then
     "$DEBUGFS" -R "dump /system/lib64/libcamera_client.so $WORK/libcamera_client.so" "$IMG" 2>/dev/null
-    "$DEBUGFS" -R "dump /system/lib64/libcameracompatbilityinfo.so $WORK/libcameracompatbilityinfo.so" "$IMG" 2>/dev/null
+    for CN in libcameracompatbilityinfo libcameracompatibilityinfo; do
+        if in_image /system/lib64/$CN.so; then "$DEBUGFS" -R "dump /system/lib64/$CN.so $WORK/libcameracompatbilityinfo.so" "$IMG" 2>/dev/null; break; fi
+    done
     "$ROOT/scripts/patch-camera-native.sh" "$WORK/libcamera_client.so" "$WORK/libcameracompatbilityinfo.so" "$OUT"
     rm -f "$WORK/libcamera_client.so" "$WORK/libcameracompatbilityinfo.so"
 fi
