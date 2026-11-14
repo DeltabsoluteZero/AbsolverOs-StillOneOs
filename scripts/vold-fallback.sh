@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Content-addressed rename for untabled builds: \0vold\0 -> \0gvld\0 (the name
-# guest_own_vold.py patches services.jar to look up). Count-guarded: refuses
-# unless exactly one NUL-delimited "vold" string, so it can never write garbage.
 WORK="$1"; OUT="$2"
 [ -s "$WORK/vold" ] || exit 0
 [ -s "$OUT/vold_patched" ] && exit 0
