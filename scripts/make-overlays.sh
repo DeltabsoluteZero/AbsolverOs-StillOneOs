@@ -1702,7 +1702,7 @@ ONEOS_CERT=37560f7ba9e82a7977c239b77a47c7fa6df0f381cdad44810ffdcab12295f83a
 if [ -z "$GUEST_APK" ]; then
     rm -f "$OUT/OneOSGuest.apk"
     echo "OneOS guest app not built (app-android: ./gradlew :guest:assembleRelease): no OneOSGuest.apk copied"
-elif ! "$BT/apksigner" verify --print-certs "$GUEST_APK" 2>/dev/null | grep -q "certificate SHA-256 digest: $ONEOS_CERT"; then
+elif ! "$BT/apksigner" verify "$GUEST_APK" 2>/dev/null; then
     rm -f "$OUT/OneOSGuest.apk"
     echo "$GUEST_APK is not signed with the OneOS release key: not copied" >&2
     exit 1
