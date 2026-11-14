@@ -2100,7 +2100,8 @@ for j in "$OUT"/*_patched.jar "$OUT"/oneos-telephony.jar; do [ -f "$j" ] && RJ="
 # satisfies the set manifest, which lists these names for every hyper set.
 for L in libsurfaceflinger libcameracompatbilityinfo; do
     if [ ! -s "$OUT/${L}_patched.so" ]; then
-        "$DEBUGFS" -R "dump /system/lib64/$L.so $WORK/$L.so" "$IMG" 2>/dev/null
+        in_image /system/lib64/$L.so || continue
+        "$DEBUGFS" -R "dump /system/lib64/$L.so $WORK/$L.so" "$IMG" 2>/dev/null || true
         if [ -s "$WORK/$L.so" ]; then
             cp -f "$WORK/$L.so" "$OUT/${L}_patched.so"
             chmod 644 "$OUT/${L}_patched.so"
