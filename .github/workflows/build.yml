@@ -149,18 +149,18 @@ jobs:
           sha256sum "$SRC" app-android/switcher/assets/guest_manager.apk app-android/guest/build/outputs/apk/release/guest-release.apk 2>/dev/null
 
       - name: Generate the matching patch set
-        run: bash scripts/make-overlays.sh system.img out/overlays_hyperos_r25
+        run: bash scripts/make-overlays.sh system.img out/overlays_hyperos_r28
 
       - run: rm -f system.img   # free runner disk
 
       - name: Register as a test set (debug only)
         run: |
           mkdir -p $GITHUB_WORKSPACE/app-android/_pkg_tmp && cp app-android/packages/* $GITHUB_WORKSPACE/app-android/_pkg_tmp/
-          [ -f out/overlays_hyperos_r25/guards.txt ] && cp -f out/overlays_hyperos_r25/guards.txt $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u_guards.txt || true
-          ( cd out/overlays_hyperos_r25
+          [ -f out/overlays_hyperos_r28/guards.txt ] && cp -f out/overlays_hyperos_r28/guards.txt $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u_guards.txt || true
+          ( cd out/overlays_hyperos_r28
             for f in *; do [ "$f" = tethering_payload.img ] && continue
               sha256sum "$f"; done ) > $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u.sha256
-          ( cd out/overlays_hyperos_r25
+          ( cd out/overlays_hyperos_r28
             for f in *_patched.jar *_patched.so vold_patched; do [ -f "$f" ] && sha256sum "$f"; done ) > $GITHUB_WORKSPACE/app-android/_pkg_tmp/hyper-f8u_guards.txt
           echo "hyper hyper-f8u" > $GITHUB_WORKSPACE/app-android/_pkg_tmp/series.txt
           
