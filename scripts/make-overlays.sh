@@ -2113,3 +2113,18 @@ for L in libsurfaceflinger libcameracompatbilityinfo; do
         fi
     fi
 done
+
+# bring-up: pudding's MiWallpaper patcher declines; ship the image's own APK as
+# MiWallpaper_patched.apk (no-op bind) so the set-integrity list is satisfied.
+if [ ! -s "$OUT/MiWallpaper_patched.apk" ]; then
+    for P in /product/app/MiWallpaper/MiWallpaper.apk /system/product/app/MiWallpaper/MiWallpaper.apk; do
+        in_image "$P" || continue
+        "$DEBUGFS" -R "dump $P $WORK/MiWallpaper.apk" "$IMG" 2>/dev/null || true
+        [ -s "$WORK/MiWallpaper.apk" ] && break
+    done
+    if [ -s "$WORK/MiWallpaper.apk" ]; then
+        cp -f "$WORK/MiWallpaper.apk" "$OUT/MiWallpaper_patched.apk"
+        chmod 644 "$OUT/MiWallpaper_patched.apk"
+        echo "bring-up: shipped unpatched MiWallpaper_patched.apk (patcher declined on this base)"
+    fi
+fi
