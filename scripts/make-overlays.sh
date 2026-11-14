@@ -2094,3 +2094,17 @@ done
 RJ=""
 for j in "$OUT"/*_patched.jar "$OUT"/oneos-telephony.jar; do [ -f "$j" ] && RJ="$RJ $j"; done
 [ -z "$RJ" ] || python3 -I "$ROOT/scripts/check-oneos-refs.py" "$BT/dexdump" $RJ
+
+# bring-up: ship unpatched copies of guard libs whose patchers declined on this
+# base (pudding). Binding the image's own lib over itself is a no-op; it only
+# satisfies the set manifest, which lists these names for every hyper set.
+for L in libsurfaceflinger libcameracompatbilityinfo; do
+    if [ ! -s "$OUT/${L}_patched.so" ]; then
+        "$DEBUGFS" -R "dump /system/lib64/$L.so $WORK/$L.so" "$IMG" 2>/dev/null
+        if [ -s "$WORK/$L.so" ]; then
+            cp -f "$WORK/$L.so" "$OUT/${L}_patched.so"
+            chmod 644 "$OUT/${L}_patched.so"
+            echo "bring-up: shipped unpatched ${L}_patched.so (patcher declined on this base)"
+        fi
+    fi
+done
