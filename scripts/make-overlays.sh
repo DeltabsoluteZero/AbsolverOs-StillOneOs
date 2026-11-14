@@ -230,26 +230,6 @@ build = next((b for b in BUILDS if all(sha(data[n]) == want for n, want in b[1].
 if build is None:
     have = ", ".join("%s %s" % (n, sha(d)[:12] if d else "missing") for n, d in data.items())
     print("vold: not a build this was written against (%s): not patched, the guest vold keeps the name vold" % have)
-    if [ -s "$WORK/vold" ]; then
-      python3 - "$WORK/vold" "$WORK/service.incremental.so" "$OUT/vold_patched" "$OUT/service.incremental_patched.so" <<'PYV' || echo "generic vold refused"
-    import sys, os
-    sv, si, ov, oi = sys.argv[1:5]
-    def ren(a, b):
-        d = open(a, "rb").read()
-        nn = d.count(b"\x00vold\x00")
-        if nn != 1:
-            sys.exit("generic vold: %s has %d NUL-vold strings" % (a, nn))
-        open(b, "wb").write(d.replace(b"\x00vold\x00", b"\x00eVld\x00"))
-        print("generic vold: renamed 1 string in", a)
-    ren(sv, ov)
-    if os.path.isfile(si) and os.path.getsize(si) > 0:
-        ren(si, oi)
-    else:
-        sys.exit("generic vold: service.incremental.so dump missing")
-    PYV
-      [ -s "$OUT/vold_patched" ] && (cd "$OUT" && sha256sum vold_patched service.incremental_patched.so) >> "$OUT/guards.txt"
-    fi
-    print("vold: not a build this was written against (%s): not patched, sed -i "/vold_patched$/d; /service\.incremental_patched\.so$/d" "$OUT/guards.txt" 2>/dev/null || true
     sys.exit(0)
 for name, off, (old, new) in build[2]:
     d = data[name]
@@ -261,83 +241,9 @@ open(inc_out, "wb").write(data["service.incremental.so"])
 print("built %s for %s (registers gvld, not android.system.vold.IVold/default)" % (vold_out, build[0]))
 print("built %s (looks up gvld)" % inc_out)
 PYEOF
-if [ -s "$WORK/vold" ]; then
-  python3 - "$WORK/vold" "$WORK/service.incremental.so" "$OUT/vold_patched" "$OUT/service.incremental_patched.so" <<'PYV' || echo "generic vold refused"
-import sys, os
-sv, si, ov, oi = sys.argv[1:5]
-def ren(a, b):
-    d = open(a, "rb").read()
-    nn = d.count(b"\x00vold\x00")
-    if nn != 1:
-        sys.exit("generic vold: %s has %d NUL-vold strings" % (a, nn))
-    open(b, "wb").write(d.replace(b"\x00vold\x00", b"\x00eVld\x00"))
-    print("generic vold: renamed 1 string in", a)
-ren(sv, ov)
-if os.path.isfile(si) and os.path.getsize(si) > 0:
-    ren(si, oi)
-else:
-    sys.exit("generic vold: service.incremental.so dump missing")
-PYV
-[ -s "$OUT/vold_patched" ] && (cd "$OUT" && sha256sum vold_patched service.incremental_patched.so) >> "$OUT/guards.txt"
-fi
-if [ -s "$WORK/vold" ]; then
-  python3 - "$WORK/vold" "$WORK/service.incremental.so" "$OUT/vold_patched" "$OUT/service.incremental_patched.so" <<'PYV' || echo "generic vold refused"
-import sys, os
-sv, si, ov, oi = sys.argv[1:5]
-def ren(a, b):
-    d = open(a, "rb").read()
-    nn = d.count(b"\x00vold\x00")
-    if nn != 1:
-        sys.exit("generic vold: %s has %d NUL-vold strings" % (a, nn))
-    open(b, "wb").write(d.replace(b"\x00vold\x00", b"\x00eVld\x00"))
-    print("generic vold: renamed 1 string in", a)
-ren(sv, ov)
-if os.path.isfile(si) and os.path.getsize(si) > 0:
-    ren(si, oi)
-else:
-    sys.exit("generic vold: service.incremental.so dump missing")
-PYV
-[ -s "$OUT/vold_patched" ] && (cd "$OUT" && sha256sum vold_patched service.incremental_patched.so) >> "$OUT/guards.txt"
-fi
-if [ -s "$WORK/vold" ]; then
-  python3 - "$WORK/vold" "$WORK/service.incremental.so" "$OUT/vold_patched" "$OUT/service.incremental_patched.so" <<'PYV' || echo "generic vold refused"
-import sys, os
-sv, si, ov, oi = sys.argv[1:5]
-def ren(a, b):
-    d = open(a, "rb").read()
-    nn = d.count(b"\x00vold\x00")
-    if nn != 1:
-        sys.exit("generic vold: %s has %d NUL-vold strings" % (a, nn))
-    open(b, "wb").write(d.replace(b"\x00vold\x00", b"\x00eVld\x00"))
-    print("generic vold: renamed 1 string in", a)
-ren(sv, ov)
-if os.path.isfile(si) and os.path.getsize(si) > 0:
-    ren(si, oi)
-else:
-    sys.exit("generic vold: service.incremental.so dump missing")
-PYV
-  [ -s "$OUT/vold_patched" ] && (cd "$OUT" && sha256sum vold_patched service.incremental_patched.so) >> "$OUT/guards.txt"
-fi
+bash "$(dirname "$0")/vold-fallback.sh" "$WORK" "$OUT" || true
 # pudding bring-up: content-addressed vold rename when the BUILDS table misses.
 # Renames \0vold\0 -> \0eVld\0 by CONTENT (no offsets), exactly-one-occurrence guard.
-if [ ! -s "$OUT/vold_patched" ] && [ -s "$WORK/vold" ]; then
-(cd "$OUT" && sha256sum vold_patched service.incremental_patched.so) >> "$OUT/guards.txt"
-  python3 - "$WORK/vold" "$WORK/service.incremental.so" "$OUT/vold_patched" "$OUT/service.incremental_patched.so" <<'PYV' || echo "generic vold refused (see message above); set will lack vold_patched"
-import sys, os
-sv, si, ov, oi = sys.argv[1:5]
-def rename(a, b):
-    d = open(a, 'rb').read()
-    n = d.count(b"\x00vold\x00")
-    if n != 1:
-        sys.exit("generic vold: %s has %d NUL-delimited vold strings (want 1); refusing" % (a, n))
-    open(b, 'wb').write(d.replace(b"\x00vold\x00", b"\x00eVld\x00"))
-    print("generic vold: renamed 1 string in", a)
-rename(sv, ov)
-if not (os.path.isfile(si) and os.path.getsize(si) > 0):
-    sys.exit("generic vold: service.incremental.so dump missing; refusing")
-rename(si, oi)
-PYV
-fi
 VOLD_GVLD=0
 if [ -f "$OUT/vold_patched" ]; then
     chmod 755 "$OUT/vold_patched"
@@ -2131,4 +2037,3 @@ RJ=""
 for j in "$OUT"/*_patched.jar "$OUT"/oneos-telephony.jar; do [ -f "$j" ] && RJ="$RJ $j"; done
 [ -z "$RJ" ] || python3 -I "$ROOT/scripts/check-oneos-refs.py" "$BT/dexdump" $RJ
 
-bash "$(dirname "$0")/vold-fallback.sh" "$WORK" "$OUT" || true
