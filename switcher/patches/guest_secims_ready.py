@@ -35,7 +35,7 @@ MARK = "oneos_secims_ready"
 
 def fail(msg):
     print("guest_secims_ready: " + msg + " (skipped, pudding bring-up)")
-    print("guest_secims_ready: skipped (pudding bring-up)"); sys.exit(0)
+    sys.exit(0)
 
 
 def main():
