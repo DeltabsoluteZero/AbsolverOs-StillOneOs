@@ -1,0 +1,182 @@
+﻿name: Build HyperOS 3 Pudding Package Set
+
+on:
+  workflow_dispatch:
+    inputs:
+      mysticgsi_url:
+        description: "MysticGSI HyperOS pudding ZIP URL"
+        required: true
+        default: "https://sourceforge.net/projects/mystic-gsi-updates/files/HyperOS/Hyperos-pudding-16-OS3.0.50.2.W-AB-20260122-MysticGSI.zip/download"
+      build_id:
+        description: "Firmware build ID (from ro.build.id)"
+        required: true
+        default: "OS3.0.5.0.2.W-AB-20260122"
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout OneOS
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-21-jdk python3 zip unzip wget curl
+
+      - name: Download apktool
+        run: |
+          mkdir -p tools
+          wget -q https://github.com/iBotPeaches/Apktool/releases/download/v2.11.1/apktool_2.11.1.jar -O tools/apktool.jar
+
+      - name: Download extract.erofs
+        run: |
+          wget -q https://github.com/MysticGSI/mysticgsi/releases/download/extract.erofs/extract.erofs -O tools/extract.erofs
+          chmod +x tools/extract.erofs
+
+      - name: Download MysticGSI HyperOS pudding image
+        run: |
+          wget -q "${{ github.event.inputs.mysticgsi_url }}" -O hyperos-pudding.zip
+          unzip -q hyperos-pudding.zip
+          SYSTEM_IMG=$(find . -name "system.img" -type f | head -1)
+          echo "SYSTEM_IMG=$SYSTEM_IMG" >> $GITHUB_ENV
+          ls -la "$SYSTEM_IMG"
+
+      - name: Run make-overlays.sh
+        env:
+          APKTOOL: ${{ github.workspace }}/tools/apktool.jar
+          EXTRACT_EROFS: ${{ github.workspace }}/tools/extract.erofs
+        run: |
+          cd ${{ github.workspace }}
+          ./scripts/make-overlays.sh "$SYSTEM_IMG" out/overlays/hyperos3-pudding
+
+      - name: Collect package set info
+        id: pkginfo
+        run: |
+          cd ${{ github.workspace }}
+          SET_DIR="out/overlays/hyperos3-pudding"
+          SHA_FILE="app-android/packages/hyperos3-pudding.sha256"
+          GUARDS_FILE="app-android/packages/hyperos3-pudding.guards.txt"
+          
+          RAW_IMG="$SET_DIR/system.raw"
+          rawBytes=$(stat -c%s "$RAW_IMG")
+          rawSha256=$(sha256sum "$RAW_IMG" | cut -d" " -f1)
+          
+          gzip -c "$RAW_IMG" > OneOS_HyperOS3_Pudding.img.gz
+          gzBytes=$(stat -c%s OneOS_HyperOS3_Pudding.img.gz)
+          gzSha256=$(sha256sum OneOS_HyperOS3_Pudding.img.gz | cut -d" " -f1)
+          
+          echo "rawBytes=$rawBytes" >> $GITHUB_OUTPUT
+          echo "rawSha256=$rawSha256" >> $GITHUB_OUTPUT
+          echo "gzBytes=$gzBytes" >> $GITHUB_OUTPUT
+          echo "gzSha256=$gzSha256" >> $GITHUB_OUTPUT
+          
+          echo "sha256_file<<EOF" >> $GITHUB_OUTPUT
+          cat "$SHA_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "guards_file<<EOF" >> $GITHUB_OUTPUT
+          cat "$GUARDS_FILE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate Kotlin entries
+        run: |
+          cat << "EOF" > kotlin_entries.txt
+          // ==== Images.kt ====
+          const val ID_HYPEROS_PUDDING = "hyperos3-pudding"
+
+          val HYPEROS_PUDDING = ImageRef(
+              id = ID_HYPEROS_PUDDING,
+              label = "HyperOS 3, Xiaomi 14 (pudding) build",
+              shortName = "Xiaomi 14",
+              name = "HyperOS 3",
+              variant = "pudding 3.0.5",
+              blurb = "Xiaomi Android 16 system from the Xiaomi 14 (pudding). No Google apps.",
+              downloadUrl = SHARED_FOLDER_URL,
+              sdk = 36,
+              buildId = "${{ github.event.inputs.build_id }}",
+              gzName = "OneOS_HyperOS3_Pudding.img.gz",
+              gzBytes = ${{ steps.pkginfo.outputs.gzBytes }}L,
+              gzSha256 = "${{ steps.pkginfo.outputs.gzSha256 }}",
+              rawBytes = ${{ steps.pkginfo.outputs.rawBytes }}L,
+              rawSha256 = "${{ steps.pkginfo.outputs.rawSha256 }}",
+              testedOn = null,
+              cpuRequired = emptyList(),
+              cpuUsedByApps = emptyList(),
+              googleServices = false,
+              family = SystemFamily.HYPEROS,
+          )
+
+          // Add to Images.ALL:
+          // val ALL: List<ImageRef> = listOf(..., HYPEROS_PUDDING)
+
+          // ==== PackageSets.kt ====
+          const val ID_HYPEROS_PUDDING = "hyperos3-pudding"
+
+          val HYPEROS_PUDDING = PackageSet(
+              id = ID_HYPEROS_PUDDING,
+              imageId = Images.ID_HYPEROS_PUDDING,
+              names = setOf(
+EOF
+          
+          while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+              file=$(echo "$line" | cut -d" " -f3-)
+              echo "                  \"$file\"," >> kotlin_entries.txt
+            fi
+          done < app-android/packages/hyperos3-pudding.sha256
+          
+          cat << "EOF" >> kotlin_entries.txt
+              ),
+              guards = listOf(
+EOF
+          
+          while IFS= read -r line; do
+            if [[ -n "$line" ]]; then
+              echo "                  \"$line\"," >> kotlin_entries.txt
+            fi
+          done < app-android/packages/hyperos3-pudding.guards.txt
+          
+          cat << "EOF" >> kotlin_entries.txt
+              ),
+          )
+
+          // ==== Profiles.kt ====
+          private val HYPEROS_PUDDING_CHOICE = ImageChoice(Images.ID_HYPEROS_PUDDING, PackageSets.ID_HYPEROS_PUDDING, tested = false)
+
+          // Add to these profiles (One UI 8/8.5 phones):
+          // A06, A07_5G, A24, A25, A33, A34, A53, E55, S_FE_9925, S_FE_8450, S_PLUS_9925, S_ULTRA_9925, S_ULTRA_8450, S_8450, M55S, S_ULTRA_8450_JP
+          // choices = listOf(OXYGEN16_CHOICE, HYPEROS_PUDDING_CHOICE)
+
+          // ==== app-android/packages/series.txt ====
+          // Add "hyperos3-pudding" to the s25 line
+EOF
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyperos3-pudding-package-set
+          path: |
+            app-android/packages/hyperos3-pudding.sha256
+            app-android/packages/hyperos3-pudding.guards.txt
+            kotlin_entries.txt
+          retention-days: 30
+
+      - name: Output summary
+        run: |
+          echo "## HyperOS 3 Pudding Package Set Built" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image hashes:**" >> $GITHUB_STEP_SUMMARY
+          echo "- gzBytes: ${{ steps.pkginfo.outputs.gzBytes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- gzSha256: ${{ steps.pkginfo.outputs.gzSha256 }}" >> $GITHUB_STEP_SUMMARY
+          echo "- rawBytes: ${{ steps.pkginfo.outputs.rawBytes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- rawSha256: ${{ steps.pkginfo.outputs.rawSha256 }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Download artifacts** for the full Kotlin entries and package set files." >> $GITHUB_STEP_SUMMARY
