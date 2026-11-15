@@ -547,7 +547,6 @@ object PackageSets {
             PackageFile("socket_exec", FileRole.GUEST_FIX),
             PackageFile("libaudiohal_aidl_patched.so", FileRole.GUEST_FIX),
             // 0.4.33: the wallpaper app starts on a one-panel phone (r11).
-            PackageFile("MiWallpaper_patched.apk", FileRole.GUEST_FIX),
             // 0.4.59 (r16): the SMS fixes every other system has (guest_smsc_international.py,
             // guest_sms_invalid_response.py), and Samsung Camera: the Z Fold8 Ultra's for the folds,
             // the Galaxy S26 Ultra's for the bar phones (guest_prepare.sh picks it by form).
