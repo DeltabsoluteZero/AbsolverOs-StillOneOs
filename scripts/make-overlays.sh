@@ -2117,7 +2117,7 @@ done
 # bring-up: pudding's MiWallpaper patcher declines; ship the image's own APK as
 # MiWallpaper_patched.apk (no-op bind) so the set-integrity list is satisfied.
 if [ ! -s "$OUT/MiWallpaper_patched.apk" ]; then
-    for P in /product/app/MiWallpaper/MiWallpaper.apk /system/product/app/MiWallpaper/MiWallpaper.apk; do
+    for P in /product/app/MiWallpaper/MiWallpaper.apk /product/priv-app/MiWallpaper/MiWallpaper.apk /system/product/app/MiWallpaper/MiWallpaper.apk /system/product/priv-app/MiWallpaper/MiWallpaper.apk /system/app/MiWallpaper/MiWallpaper.apk /system/priv-app/MiWallpaper/MiWallpaper.apk; do
         in_image "$P" || continue
         "$DEBUGFS" -R "dump $P $WORK/MiWallpaper.apk" "$IMG" 2>/dev/null || true
         [ -s "$WORK/MiWallpaper.apk" ] && break
