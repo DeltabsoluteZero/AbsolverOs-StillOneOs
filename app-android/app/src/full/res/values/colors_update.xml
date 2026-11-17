@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="oneos_update_banner_bg">#16120B</color>
+    <color name="oneos_update_banner_icon">#D4AF37</color>
+</resources>
