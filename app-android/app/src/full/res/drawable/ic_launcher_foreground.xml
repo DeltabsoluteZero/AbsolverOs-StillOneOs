@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Figma 395:11658: original 500 x 500 foreground geometry. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp" android:viewportWidth="500" android:viewportHeight="500">
-    <path android:fillColor="#FFFFFF" android:fillAlpha="0.6"
-        android:pathData="M259,105H326A44,44 0,0 1,370 149V331A44,44 0,0 1,326 375H259A44,44 0,0 1,215 331V149A44,44 0,0 1,259 105Z" />
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M175,125H242A44,44 0,0 1,286 169V351A44,44 0,0 1,242 395H175A44,44 0,0 1,131 351V169A44,44 0,0 1,175 125Z" />
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M49,33C49,31.34 50.34,30 52,30H56C57.66,30 59,31.34 59,33V49H75C76.66,49 78,50.34 78,52V56C78,57.66 76.66,59 75,59H59V75C59,76.66 57.66,78 56,78H52C50.34,78 49,76.66 49,75V59H33C31.34,59 30,57.66 30,56V52C30,50.34 31.34,49 33,49H49V33Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="30"
+                android:startY="30"
+                android:endX="78"
+                android:endY="78"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFF0A6" />
+                <item android:offset="0.5" android:color="#FFD4AF37" />
+                <item android:offset="1.0" android:color="#FF9E7318" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>
