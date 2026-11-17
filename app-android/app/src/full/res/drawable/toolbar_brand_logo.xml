@@ -1,32 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:width="32dp" android:height="32dp" android:end="12dp">
-        <vector xmlns:aapt="http://schemas.android.com/aapt"
-            android:width="32dp"
-            android:height="32dp"
-            android:viewportWidth="32"
-            android:viewportHeight="32">
-            <path
-                android:fillColor="#16130C"
-                android:pathData="M9,1h14a8,8 0,0 1,8 8v14a8,8 0,0 1,-8 8H9a8,8 0,0 1,-8 -8V9a8,8 0,0 1,8 -8z" />
-            <path
-                android:pathData="M16,6.5V25.5 M7.77,11.25L24.23,20.75 M24.23,11.25L7.77,20.75 M13.2,8.5L16,11.3L18.8,8.5 M13.2,23.5L16,20.7L18.8,23.5 M8.5,14L11.8,13.6L10.7,10.3 M23.5,18L20.2,18.4L21.3,21.7 M10.7,21.7L11.8,18.4L8.5,18 M21.3,10.3L20.2,13.6L23.5,14"
-                android:strokeWidth="1.85"
-                android:strokeLineCap="round"
-                android:strokeLineJoin="round">
-                <aapt:attr name="android:strokeColor">
-                    <gradient
-                        android:startX="7"
-                        android:startY="7"
-                        android:endX="25"
-                        android:endY="25"
-                        android:type="linear">
-                        <item android:offset="0.0" android:color="#FFFFF2B2" />
-                        <item android:offset="0.5" android:color="#FFD4AF37" />
-                        <item android:offset="1.0" android:color="#FFA67C1E" />
-                    </gradient>
-                </aapt:attr>
-            </path>
-        </vector>
-    </item>
+    <item android:width="32dp" android:height="32dp" android:end="12dp" android:drawable="@drawable/oneos_boot_icon" />
 </layer-list>
