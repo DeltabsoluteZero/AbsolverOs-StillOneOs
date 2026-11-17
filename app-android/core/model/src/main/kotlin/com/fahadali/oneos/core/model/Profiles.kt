@@ -1053,7 +1053,7 @@ object Profiles {
         codename = "a06x",
         socModel = "MT6835",
         form = FormFactor.BAR,
-        choices = listOf(HYPEROS_CHOICE, OXYGEN16_CHOICE),
+        choices = listOf(X9U_IN_CHOICE, X9U_IN_1105_CHOICE, INFINITYX_CHOICE, LINEAGE_CHOICE, HYPEROS_CHOICE, OXYGEN16_CHOICE),
         notes = listOf(MEDIATEK),
     )
 
