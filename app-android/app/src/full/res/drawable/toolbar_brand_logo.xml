@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:width="32dp" android:height="32dp" android:end="12dp">
-        <vector
+        <vector xmlns:aapt="http://schemas.android.com/aapt"
             android:width="32dp"
             android:height="32dp"
             android:viewportWidth="32"
             android:viewportHeight="32">
             <path
-                android:fillColor="#120F09"
-                android:strokeColor="#D4AF37"
-                android:strokeWidth="1.6"
-                android:pathData="M9,1.5h14A7.5,7.5 0,0 1,30.5 9v14a7.5,7.5 0,0 1,-7.5 7.5H9A7.5,7.5 0,0 1,1.5 23V9A7.5,7.5 0,0 1,9 1.5z" />
-            <path
-                android:fillColor="#F7DF8B"
-                android:pathData="M16,6.5L23.5,24.5H20.1L18.4,20.2H13.6L11.9,24.5H8.5L16,6.5ZM16,11.6L14.5,17.5H17.5L16,11.6Z" />
+                android:fillColor="#12110E"
+                android:pathData="M9,1h14a8,8 0,0 1,8 8v14a8,8 0,0 1,-8 8H9a8,8 0,0 1,-8 -8V9a8,8 0,0 1,8 -8z" />
+            <path android:pathData="M14.5,7.5C14.5,6.95 14.95,6.5 15.5,6.5H16.5C17.05,6.5 17.5,6.95 17.5,7.5V14.5H24.5C25.05,14.5 25.5,14.95 25.5,15.5V16.5C25.5,17.05 25.05,17.5 24.5,17.5H17.5V24.5C17.5,25.05 17.05,25.5 16.5,25.5H15.5C14.95,25.5 14.5,25.05 14.5,24.5V17.5H7.5C6.95,17.5 6.5,17.05 6.5,16.5V15.5C6.5,14.95 6.95,14.5 7.5,14.5H14.5V7.5Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient
+                        android:startX="7"
+                        android:startY="7"
+                        android:endX="25"
+                        android:endY="25"
+                        android:type="linear">
+                        <item android:offset="0.0" android:color="#FFFFF0A6" />
+                        <item android:offset="0.5" android:color="#FFD4AF37" />
+                        <item android:offset="1.0" android:color="#FF9E7318" />
+                    </gradient>
+                </aapt:attr>
+            </path>
         </vector>
     </item>
 </layer-list>
