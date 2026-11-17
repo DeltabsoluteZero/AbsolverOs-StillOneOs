@@ -72,7 +72,6 @@ open class SystemsActivity : ToolbarActivity() {
             fillHorizontalPadding = false
         }
         findViewById<View>(dev.oneuiproject.oneui.design.R.id.tbl_bottom_corners).visibility = View.GONE
-        installMovingGoldShimmer()
     }
 
     override fun onActivityReenter(resultCode: Int, data: Intent?) {
@@ -185,6 +184,7 @@ class SystemsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        installMovingGoldShimmer(view)
         val carousel = view.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.systems_carousel)
         navigatingAway = false
         carousel.alpha = 0f
@@ -283,7 +283,63 @@ class SystemsFragment : Fragment() {
         super.onStop()
     }
 
+    private var goldShimmerAnimator: android.animation.ValueAnimator? = null
+
+    private fun installMovingGoldShimmer(root: View) {
+        val banner = root.findViewById<View>(R.id.systems_update_banner) ?: return
+        val density = resources.displayMetrics.density
+        val radius = 24f * density
+        val strokeWidth = 1.4f * density
+        val bgPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+        val strokePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            style = android.graphics.Paint.Style.STROKE
+            this.strokeWidth = strokeWidth
+        }
+        val bgColors = intArrayOf(0xFF0E0C08.toInt(), 0xFF261D0E.toInt(), 0xFF3A2B12.toInt(), 0xFF14100A.toInt(), 0xFF0E0C08.toInt())
+        val strokeColors = intArrayOf(0x66D4AF37, 0xFFFFE082.toInt(), 0xFFD4AF37.toInt(), 0x558C6218, 0x66D4AF37)
+        var phase = 0f
+
+        val shimmerDrawable = object : android.graphics.drawable.Drawable() {
+            override fun draw(canvas: android.graphics.Canvas) {
+                val w = bounds.width().toFloat().coerceAtLeast(1f)
+                val h = bounds.height().toFloat().coerceAtLeast(1f)
+                val shift = (phase * 2f - 0.5f) * w
+                bgPaint.shader = android.graphics.LinearGradient(
+                    shift - w * 0.6f, 0f, shift + w * 0.9f, h,
+                    bgColors, null, android.graphics.Shader.TileMode.MIRROR,
+                )
+                strokePaint.shader = android.graphics.LinearGradient(
+                    shift - w * 0.5f, 0f, shift + w * 0.8f, h,
+                    strokeColors, null, android.graphics.Shader.TileMode.MIRROR,
+                )
+                val rect = android.graphics.RectF(strokeWidth / 2f, strokeWidth / 2f, w - strokeWidth / 2f, h - strokeWidth / 2f)
+                canvas.drawRoundRect(rect, radius, radius, bgPaint)
+                canvas.drawRoundRect(rect, radius, radius, strokePaint)
+            }
+            override fun setAlpha(alpha: Int) { bgPaint.alpha = alpha; strokePaint.alpha = alpha }
+            override fun setColorFilter(cf: android.graphics.ColorFilter?) { bgPaint.colorFilter = cf; strokePaint.colorFilter = cf }
+            @Deprecated("Deprecated in Java")
+            override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSLUCENT
+        }
+        banner.background = shimmerDrawable
+
+        goldShimmerAnimator?.cancel()
+        goldShimmerAnimator = android.animation.ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 3600L
+            repeatCount = android.animation.ValueAnimator.INFINITE
+            repeatMode = android.animation.ValueAnimator.RESTART
+            interpolator = android.view.animation.LinearInterpolator()
+            addUpdateListener { anim ->
+                phase = anim.animatedValue as Float
+                shimmerDrawable.invalidateSelf()
+            }
+            start()
+        }
+    }
+
     override fun onDestroyView() {
+        goldShimmerAnimator?.cancel()
+        goldShimmerAnimator = null
         view?.findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.systems_carousel)?.let { rv ->
             initialDraw?.let { rv.viewTreeObserver.removeOnPreDrawListener(it) }
             rv.animate().cancel()
@@ -775,66 +831,6 @@ class SystemsFragment : Fragment() {
     private fun cardAspect(): Float = if (resources.getBoolean(R.bool.home_two_pane)) 1050f / 1548f else 730f / 1464f
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
-
-    private var goldShimmerAnimator: android.animation.ValueAnimator? = null
-
-    private fun installMovingGoldShimmer() {
-        val banner = findViewById<View>(R.id.systems_update_banner)
-        val density = resources.displayMetrics.density
-        val radius = 24f * density
-        val strokeWidth = 1.4f * density
-        val bgPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
-        val strokePaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            style = android.graphics.Paint.Style.STROKE
-            this.strokeWidth = strokeWidth
-        }
-        val bgColors = intArrayOf(0xFF0E0C08.toInt(), 0xFF261D0E.toInt(), 0xFF3A2B12.toInt(), 0xFF14100A.toInt(), 0xFF0E0C08.toInt())
-        val strokeColors = intArrayOf(0x66D4AF37, 0xFFFFE082.toInt(), 0xFFD4AF37.toInt(), 0x558C6218, 0x66D4AF37)
-        var phase = 0f
-
-        val shimmerDrawable = object : android.graphics.drawable.Drawable() {
-            override fun draw(canvas: android.graphics.Canvas) {
-                val w = bounds.width().toFloat().coerceAtLeast(1f)
-                val h = bounds.height().toFloat().coerceAtLeast(1f)
-                val shift = (phase * 2f - 0.5f) * w
-                bgPaint.shader = android.graphics.LinearGradient(
-                    shift - w * 0.6f, 0f, shift + w * 0.9f, h,
-                    bgColors, null, android.graphics.Shader.TileMode.MIRROR,
-                )
-                strokePaint.shader = android.graphics.LinearGradient(
-                    shift - w * 0.5f, 0f, shift + w * 0.8f, h,
-                    strokeColors, null, android.graphics.Shader.TileMode.MIRROR,
-                )
-                val rect = android.graphics.RectF(strokeWidth / 2f, strokeWidth / 2f, w - strokeWidth / 2f, h - strokeWidth / 2f)
-                canvas.drawRoundRect(rect, radius, radius, bgPaint)
-                canvas.drawRoundRect(rect, radius, radius, strokePaint)
-            }
-            override fun setAlpha(alpha: Int) { bgPaint.alpha = alpha; strokePaint.alpha = alpha }
-            override fun setColorFilter(cf: android.graphics.ColorFilter?) { bgPaint.colorFilter = cf; strokePaint.colorFilter = cf }
-            @Deprecated("Deprecated in Java")
-            override fun getOpacity(): Int = android.graphics.PixelFormat.TRANSLUCENT
-        }
-        banner?.background = shimmerDrawable
-
-        goldShimmerAnimator?.cancel()
-        goldShimmerAnimator = android.animation.ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 3600L
-            repeatCount = android.animation.ValueAnimator.INFINITE
-            repeatMode = android.animation.ValueAnimator.RESTART
-            interpolator = android.view.animation.LinearInterpolator()
-            addUpdateListener { anim ->
-                phase = anim.animatedValue as Float
-                shimmerDrawable.invalidateSelf()
-            }
-            start()
-        }
-    }
-
-    override fun onDestroy() {
-        goldShimmerAnimator?.cancel()
-        goldShimmerAnimator = null
-        super.onDestroy()
-    }
 
     private companion object {
         /** Device glyphs by the system's place in the phone's list (never by brand). */
