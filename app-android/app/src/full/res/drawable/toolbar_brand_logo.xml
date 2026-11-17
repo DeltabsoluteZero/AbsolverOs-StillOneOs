@@ -1,3 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:width="32dp" android:height="32dp" android:end="12dp" android:drawable="@drawable/oneos_boot_icon" />
+    <item android:width="32dp" android:height="32dp" android:end="12dp">
+        <vector
+            android:width="32dp"
+            android:height="32dp"
+            android:viewportWidth="32"
+            android:viewportHeight="32">
+            <path
+                android:fillColor="#120F09"
+                android:strokeColor="#D4AF37"
+                android:strokeWidth="1.6"
+                android:pathData="M9,1.5h14A7.5,7.5 0,0 1,30.5 9v14a7.5,7.5 0,0 1,-7.5 7.5H9A7.5,7.5 0,0 1,1.5 23V9A7.5,7.5 0,0 1,9 1.5z" />
+            <path
+                android:fillColor="#F7DF8B"
+                android:pathData="M16,6.5L23.5,24.5H20.1L18.4,20.2H13.6L11.9,24.5H8.5L16,6.5ZM16,11.6L14.5,17.5H17.5L16,11.6Z" />
+        </vector>
+    </item>
 </layer-list>
